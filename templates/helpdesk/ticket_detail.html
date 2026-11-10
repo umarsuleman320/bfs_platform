@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% block header_title %}Ticket #{{ ticket.id }}: {{ ticket.subject }}{% endblock %}
+
+{% block content %}
+<style>
+    .ticket-view-layout { max-width: 850px; margin: 0 auto; animation: fadeInUp 0.6s ease; }
+    .ticket-head-card {
+        background: white; border-radius: 24px; padding: 30px; border: 1px solid var(--line);
+        margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0, 51, 102, 0.03);
+    }
+    .thread-box { margin-bottom: 30px; display: flex; flex-direction: column; gap: 18px; }
+    .msg-card {
+        background: white; border-radius: 20px; padding: 22px; border: 1px solid var(--line);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+    }
+    .msg-card.mentor-reply { border-left: 5px solid var(--navy); background: #fdfefe; }
+    .msg-card.mentee-reply { border-left: 5px solid var(--gold); }
+</style>
+
+<div class="ticket-view-layout">
+    <div style="margin-bottom: 20px;">
+        <a href="{% url 'helpdesk:home' %}" style="text-decoration: none; color: var(--navy); font-weight: 700; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
+            <i class="fas fa-arrow-left"></i> Back to Help Desk Queue
+        </a>
+    </div>
+
+    <!-- TICKET HEADER -->
+    <div class="ticket-head-card">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px; margin-bottom: 15px;">
+            <div>
+                <span style="font-size: 11px; font-weight: 800; color: var(--gold); text-transform: uppercase;">Ticket #{{ ticket.id }} • {{ ticket.get_priority_display }} Priority</span>
+                <h2 style="margin: 6px 0 0; font-family: 'Lexend'; color: var(--navy); font-size: 22px;">{{ ticket.subject }}</h2>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 11px; font-weight: 800; padding: 6px 14px; border-radius: 20px; text-transform: uppercase; letter-spacing: 1px; background: {% if ticket.status == 'resolved' %}#dcfce7; color: #16a34a;{% elif ticket.status == 'escalated' %}#fee2e2; color: #dc2626;{% else %}#e0f2fe; color: #0284c7;{% endif %}">
+                    {{ ticket.get_status_display }}
+                </span>
+
+                {% if user.role != 'mentee' %}
+                <form method="post" action="{% url 'helpdesk:update_ticket_status' ticket.id %}" style="display: inline-block;">
+                    {% csrf_token %}
+                    <select name="status" onchange="this.form.submit()" style="padding: 6px 10px; border-radius: 10px; font-size: 12px; font-weight: 700; border: 1.5px solid var(--line); background: white; cursor: pointer;">
+                        <option value="open" {% if ticket.status == 'open' %}selected{% endif %}>Status: Open</option>
+                        <option value="in_progress" {% if ticket.status == 'in_progress' %}selected{% endif %}>Status: In Progress</option>
+                        <option value="awaiting_mentee" {% if ticket.status == 'awaiting_mentee' %}selected{% endif %}>Status: Awaiting Mentee</option>
+                        <option value="resolved" {% if ticket.status == 'resolved' %}selected{% endif %}>Status: Resolved</option>
+                        <option value="escalated" {% if ticket.status == 'escalated' %}selected{% endif %}>Status: Escalate to Mgmt</option>
+                    </select>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+
+        <div style="font-size: 12px; color: #64748b; margin-bottom: 18px; display: flex; gap: 20px; flex-wrap: wrap;">
+            <span><i class="far fa-user"></i> Fellow: <strong>{{ ticket.mentee.get_full_name|default:ticket.mentee.username }}</strong></span>
+            <span><i class="fas fa-user-shield"></i> Assigned: <strong>{{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username|default:"General Support" }}</strong></span>
+            <span><i class="far fa-clock"></i> Opened {{ ticket.created_at|date:"M d, Y H:i" }}</span>
+        </div>
+
+        <div style="background: #f8fafc; border-radius: 14px; padding: 18px; font-size: 14px; line-height: 1.6; color: #334155;">
+            {{ ticket.message }}
+        </div>
+    </div>
+
+    <!-- RESPONSES THREAD -->
+    <h3 style="margin: 0 0 16px; font-family: 'Lexend'; color: var(--navy); font-size: 17px;">
+        Discussion Thread ({{ responses.count }})
+    </h3>
+
+    <div class="thread-box">
+        {% for r in responses %}
+        <div class="msg-card {% if r.responder.role == 'mentor' or r.responder.role == 'coordinator' %}mentor-reply{% else %}mentee-reply{% endif %}">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <strong style="color: var(--navy); font-size: 14px;">{{ r.responder.get_full_name|default:r.responder.username }}</strong>
+                    <span style="font-size: 10px; font-weight: 800; background: #f1f5f9; padding: 2px 8px; border-radius: 10px; text-transform: uppercase;">
+                        {{ r.responder.get_role_display }}
+                    </span>
+                </div>
+                <span style="font-size: 11px; color: #94a3b8;">{{ r.created_at|timesince }} ago</span>
+            </div>
+            <p style="margin: 0; color: #334155; font-size: 14px; line-height: 1.6;">{{ r.message }}</p>
+        </div>
+        {% empty %}
+        <div style="background: white; border-radius: 18px; padding: 30px; text-align: center; border: 1px dashed var(--line); color: #94a3b8; font-size: 13px;">
+            No responses posted yet. Send a reply below.
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- REPLY FORM -->
+    {% if ticket.status != 'resolved' %}
+    <div style="background: white; border-radius: 24px; padding: 30px; border: 1px solid var(--line); box-shadow: 0 10px 30px rgba(0,0,0,0.02);">
+        <h4 style="margin: 0 0 14px; font-family: 'Lexend'; color: var(--navy); font-size: 16px;">Post Reply</h4>
+        <form method="post" action="{% url 'helpdesk:respond_ticket' ticket.id %}">
+            {% csrf_token %}
+            <textarea name="message" rows="4" placeholder="Type your response here..." required style="width: 100%; padding: 14px 18px; border: 1.5px solid var(--line); border-radius: 14px; font-size: 14px; font-family: inherit; margin-bottom: 16px; box-sizing: border-box;"></textarea>
+            <button type="submit" style="padding: 12px 26px; border-radius: 12px; background: var(--navy); color: white; border: none; font-size: 14px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fas fa-paper-plane"></i> Send Reply
+            </button>
+        </form>
+    </div>
+    {% else %}
+    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 18px; padding: 20px; text-align: center; color: #16a34a; font-weight: 700; font-size: 14px;">
+        <i class="fas fa-check-circle"></i> This inquiry has been resolved.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+{% block header_title %}{{ group.name }} Console{% endblock %}
+
+{% block content %}
+<style>
+    /* ADVANCED STYLING */
+    .btn-action { padding: 8px 16px; border-radius: 10px; font-size: 12px; font-weight: 700; text-decoration: none; transition: 0.3s; }
+    .btn-remove { color: #e74c3c; border: 1px solid #fbd9d5; display: inline-flex; align-items: center; gap: 5px; }
+    .btn-remove:hover { background: #e74c3c; color: white; transform: scale(1.05); }
+
+    /* MODAL SYSTEM */
+    .modal-overlay {
+        position: fixed; inset: 0; background: rgba(0,26,51,0.75);
+        backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; z-index: 2000;
+    }
+    .modal-card {
+        background: white; border-radius: 30px; width: 95%; max-width: 500px;
+        max-height: 85vh; display: flex; flex-direction: column;
+        padding: 35px; box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+        animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes popIn { from { transform: scale(0.9) translateY(20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+
+    .user-scroll-list {
+        overflow-y: auto; margin: 20px 0; border: 2px solid #f8fafd; border-radius: 18px;
+        padding: 10px; flex: 1; background: #fdfdfd;
+    }
+
+    /* SELECT STYLING */
+    .custom-select {
+        width: 100%; padding: 15px; border-radius: 15px; border: 2px solid #eee;
+        font-family: inherit; font-size: 14px; color: var(--navy); outline: none;
+        transition: 0.3s; appearance: none; background: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") no-repeat right 15px center/15px;
+    }
+    .custom-select:focus { border-color: var(--gold); }
+</style>
+
+<!-- TOP NAVIGATION -->
+<div style="margin-bottom: 25px;">
+    <a href="{% url 'groups:group_list' %}" style="text-decoration: none; color: var(--navy); font-weight: 700; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; opacity: 0.7; transition: 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+        <i class="fas fa-chevron-left"></i> Back to Group Manager
+    </a>
+</div>
+
+<!-- GROUP MASTER CARD -->
+<div class="card" style="border-top: 6px solid var(--gold); display: flex; justify-content: space-between; align-items: flex-start; animation: slideInRight 0.6s ease; padding: 30px;">
+    <div>
+        <span style="font-size: 10px; font-weight: 800; background: var(--bg); color: var(--navy); padding: 5px 12px; border-radius: 20px; letter-spacing: 1px;">RESEARCH TRACK</span>
+        <h2 style="margin:10px 0 5px; font-family: 'Lexend'; color: var(--navy); font-size: 28px;">{{ group.name }}</h2>
+        <div style="display: flex; gap: 20px; align-items: center; margin-top: 15px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 30px; height: 30px; border-radius: 50%; background: var(--navy); color: white; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800;">
+                    <i class="fas fa-user-tie"></i>
+                </div>
+                <div>
+                    <div style="font-size: 10px; color: #888; font-weight: 800; text-transform: uppercase;">Lead Mentor</div>
+                    <div style="font-size: 14px; font-weight: 700; color: var(--navy);">{{ group.mentor.get_full_name|default:"Unassigned" }}</div>
+                </div>
+            </div>
+            <div style="width: 1px; height: 30px; background: #eee;"></div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 30px; height: 30px; border-radius: 50%; background: var(--gold); color: white; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800;">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div>
+                    <div style="font-size: 10px; color: #888; font-weight: 800; text-transform: uppercase;">Capacity</div>
+                    <div style="font-size: 14px; font-weight: 700; color: var(--navy);">{{ group.member_count }} / {{ group.capacity }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+        <button onclick="openModal('addModal')" style="background: var(--navy); color: white; border: none; padding: 12px 25px; border-radius: 14px; font-weight: 700; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 20px rgba(0, 51, 102, 0.1);">
+            <i class="fas fa-plus-circle"></i> Add Fellows
+        </button>
+        <button onclick="openModal('mentorModal')" style="background: white; color: var(--navy); border: 2px solid #eee; padding: 12px 25px; border-radius: 14px; font-weight: 700; cursor: pointer; transition: 0.3s;">
+            <i class="fas fa-user-edit"></i> Assign Lead
+        </button>
+    </div>
+</div>
+
+<!-- ROSTER SECTION -->
+<div class="card" style="margin-top: 25px; padding: 0; overflow: hidden; animation: fadeInUp 0.8s ease;">
+    <div style="padding: 25px; background: #fafafa; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin:0; color: var(--navy); font-size: 18px; font-family: 'Lexend';">Membership Roster</h3>
+        <span style="font-size: 12px; color: #888; font-weight: 600;">{{ members.count }} Fellows Enrolled</span>
+    </div>
+    
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="text-align: left; color: #aaa; font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #eee;">
+                    <th style="padding: 20px 25px;">Fellow Identity</th>
+                    <th>Joined Date</th>
+                    <th style="text-align: right; padding-right: 25px;">Control</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for membership in members %}
+                <tr style="border-bottom: 1px solid #f9f9f9; transition: 0.3s;" onmouseover="this.style.background='#fcfcfc'" onmouseout="this.style.background='transparent'">
+                    <td style="padding: 15px 25px; display: flex; align-items: center; gap: 15px;">
+                        <div style="width: 42px; height: 42px; background: linear-gradient(135deg, var(--navy), #004d99); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 800; color: white; font-size: 14px; box-shadow: 0 4px 10px rgba(0, 51, 102, 0.15);">
+                            {{ membership.user.username|first|upper }}
+                        </div>
+                        <div>
+                            <div style="font-weight: 700; color: var(--navy); font-size: 15px;">{{ membership.user.get_full_name|default:membership.user.username }}</div>
+                            <div style="font-size: 12px; color: #999;">{{ membership.user.email }}</div>
+                        </div>
+                    </td>
+                    <td style="font-size: 13px; color: #666; font-weight: 600;">{{ membership.joined_at|date:"M d, Y" }}</td>
+                    <td style="text-align: right; padding-right: 25px;">
+                        <a href="{% url 'groups:remove_member' group.id membership.user.id %}" 
+                           onclick="return confirm('Strict Action: Remove this fellow from the research track?')"
+                           class="btn-action btn-remove">
+                            <i class="fas fa-user-minus"></i> Remove
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" style="padding: 80px 25px; text-align: center; color: #bbb;">
+                        <div style="font-size: 40px; margin-bottom: 15px; opacity: 0.2;"><i class="fas fa-users-slash"></i></div>
+                        <div style="font-weight: 700;">No Fellows Found</div>
+                        <div style="font-size: 13px;">This track is currently empty. Use the "Add Fellows" button to begin.</div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- MODAL 1: LEADERSHIP ASSIGNMENT -->
+<div class="modal-overlay" id="mentorModal">
+    <div class="modal-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 style="margin:0; font-family: 'Lexend'; color: var(--navy); font-size: 22px;">Leadership Assignment</h3>
+            <button onclick="closeModal('mentorModal')" style="background: none; border: none; font-size: 24px; color: #ccc; cursor: pointer;">&times;</button>
+        </div>
+        <p style="font-size: 14px; color: #666; margin-bottom: 25px;">Assign a Lead Mentor or Supervisor to oversee <strong>{{ group.name }}</strong>.</p>
+        
+        <form action="{% url 'groups:assign_mentor' group.id %}" method="post">
+            {% csrf_token %}
+            <div style="margin-bottom: 25px;">
+                <label style="display: block; font-size: 11px; font-weight: 800; color: #aaa; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px;">Select Leader</label>
+                <select name="mentor_id" required class="custom-select">
+                    <option value="" disabled {% if not group.mentor %}selected{% endif %}>Choose a mentor...</option>
+                    {% for mentor in available_mentors %}
+                        <option value="{{ mentor.id }}" {% if group.mentor.id == mentor.id %}selected{% endif %}>
+                            {{ mentor.get_full_name|default:mentor.username }} ({{ mentor.get_role_display }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <button type="submit" style="background: var(--navy); color: white; width: 100%; border: none; padding: 18px; border-radius: 16px; font-weight: 700; cursor: pointer; transition: 0.3s; font-family: 'Lexend'; box-shadow: 0 10px 20px rgba(0, 51, 102, 0.2);">
+                Confirm Leadership Change
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL 2: BULK FELLOW ASSIGNMENT -->
+<div class="modal-overlay" id="addModal">
+    <div class="modal-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 style="margin:0; font-family: 'Lexend'; color: var(--navy); font-size: 22px;">Fellow Assignment</h3>
+            <button onclick="closeModal('addModal')" style="background: none; border: none; font-size: 24px; color: #ccc; cursor: pointer;">&times;</button>
+        </div>
+        <p style="font-size: 14px; color: #666;">Select fellows to instantly enroll into <strong>{{ group.name }}</strong>.</p>
+        
+        <form action="{% url 'groups:add_members' group.id %}" method="post" style="display:contents;">
+            {% csrf_token %}
+            <div class="user-scroll-list">
+                {% for u in available_mentees %}
+                    <label style="display: flex; align-items: center; gap: 15px; padding: 15px; border-bottom: 1px solid #f9f9f9; cursor: pointer; transition: 0.2s; border-radius: 12px;" onmouseover="this.style.background='#f5f8fa'">
+                        <input type="checkbox" name="user_ids" value="{{ u.id }}" style="width: 22px; height: 22px; accent-color: var(--gold); border-radius: 6px;">
+                        <div>
+                            <div style="font-size: 15px; font-weight: 700; color: var(--navy);">{{ u.get_full_name|default:u.username }}</div>
+                            <div style="font-size: 11px; color: #aaa;">User ID: {{ u.username }}</div>
+                        </div>
+                    </label>
+                {% empty %}
+                    <div style="text-align: center; padding: 40px 20px; color: #999;">
+                        <i class="fas fa-check-circle" style="display:block; font-size: 32px; margin-bottom: 10px; color: #2ecc71; opacity: 0.5;"></i>
+                        <div style="font-weight: 700;">No Available Mentees</div>
+                        <div style="font-size: 12px;">All registered fellows are already in this group.</div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div style="display: flex; gap: 15px;">
+                <button type="button" onclick="closeModal('addModal')" style="flex:1; background: #f5f5f5; color: #666; border:none; padding:18px; border-radius:16px; font-weight:700; cursor:pointer; transition: 0.3s;">Cancel</button>
+                <button type="submit" style="flex:2; background: var(--navy); color:white; border:none; padding:18px; border-radius:16px; font-weight:700; cursor:pointer; font-family: 'Lexend'; box-shadow: 0 10px 20px rgba(0, 51, 102, 0.2);">
+                    Execute Assignment
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openModal(id) { 
+        document.getElementById(id).style.display = 'flex'; 
+        document.body.style.overflow = 'hidden'; 
+    }
+    function closeModal(id) { 
+        document.getElementById(id).style.display = 'none'; 
+        document.body.style.overflow = 'auto'; 
+    }
+    
+    // Close modal if user clicks on the background overlay
+    window.onclick = function(e) {
+        if (e.target.classList.contains('modal-overlay')) {
+            e.target.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    }
+</script>
+{% endblock %}

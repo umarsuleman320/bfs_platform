@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block header_title %}Risk Intervention Dashboard{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 30px; animation: fadeInUp 0.6s ease;">
+    <h2 style="font-family: 'Lexend'; color: var(--navy); margin: 0;">Fellowship Flags</h2>
+    <p style="color: #666;">The following fellows have been flagged for system-detected disengagement.</p>
+</div>
+
+<div style="display: grid; gap: 20px;">
+    {% for fellow in fellows %}
+    <div class="card" style="border-left: 6px solid #e74c3c; display: flex; justify-content: space-between; align-items: center; animation: slideInRight 0.5s ease backwards;">
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <div style="width: 50px; height: 50px; border-radius: 12px; background: #ffebee; color: #c62828; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 18px;">
+                {{ fellow.username|first|upper }}
+            </div>
+            <div>
+                <h4 style="margin: 0; color: var(--navy); font-family: 'Lexend';">{{ fellow.get_full_name|default:fellow.username }}</h4>
+                <div style="margin-top: 5px;">
+                    <span style="color: #c62828; font-size: 12px; font-weight: 700;">
+                        <i class="fas fa-exclamation-circle"></i> Trigger: {{ fellow.overdue_count }} Overdue Assignments
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <a href="{% url 'progress:raise_escalation' fellow.id %}" class="btn-gold" style="background: #e74c3c; font-size: 11px;">ESCALATE TO MGMT</a>
+            <a href="{% url 'accounts:profile' %}" class="btn-gold" style="background: var(--navy); font-size: 11px;">VIEW HISTORY</a>
+        </div>
+    </div>
+    {% empty %}
+    <div class="card" style="text-align: center; padding: 60px; color: #bbb;">
+        <i class="fas fa-shield-check" style="font-size: 40px; color: #2ecc71; margin-bottom: 15px; display: block;"></i>
+        <p>System Safe: No fellows are currently meeting at-risk criteria.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

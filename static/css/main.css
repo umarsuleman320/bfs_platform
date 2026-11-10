@@ -1,0 +1,77 @@
+:root {
+    --navy: #003366;  /* From your logo */
+    --gold: #FF9900;  /* From your logo border */
+    --white: #ffffff;
+    --bg-light: #f4f7f6;
+}
+
+/* Advanced Entrance Animation */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes logoPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+body {
+    background-color: var(--bg-light);
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.login-card {
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    animation: fadeInUp 0.8s ease-out; /* Smooth fade in */
+}
+
+.logo-animation {
+    width: 120px;
+    margin-bottom: 20px;
+    animation: logoPulse 3s infinite ease-in-out;
+}
+
+.btn-primary {
+    background-color: var(--navy);
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.btn-primary:hover {
+    background-color: var(--gold);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 153, 0, 0.4);
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 2px solid #eee;
+    border-radius: 10px;
+    box-sizing: border-box;
+}
+
+input:focus {
+    border-color: var(--navy);
+    outline: none;
+}

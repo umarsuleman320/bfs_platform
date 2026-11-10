@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% block header_title %}Available Research Tracks{% endblock %}
+
+{% block content %}
+<style>
+    /* MODAL ANIMATION */
+    .modal-overlay {
+        position: fixed; inset: 0; background: rgba(0,51,102,0.6);
+        backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 2000;
+    }
+    .modal-card {
+        background: white; border-radius: 24px; width: 95%; max-width: 450px;
+        padding: 35px; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+    /* BUTTON HOVER EFFECTS */
+    .btn-join-active:hover {
+        background: var(--gold) !important;
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(255, 153, 0, 0.3);
+    }
+
+    .group-card {
+        transition: 0.4s;
+        border-top: 5px solid var(--gold);
+        display: flex;
+        flex-direction: column;
+        animation: fadeInUp 0.6s ease backwards;
+    }
+
+    .group-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    }
+</style>
+
+<div class="group-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px;">
+    {% for group in groups %}
+    <div class="card group-card" style="animation-delay: calc({{ forloop.index }} * 0.1s);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3 style="margin:0; font-family: 'Lexend'; color: var(--navy);">{{ group.name }}</h3>
+            <span style="font-size: 10px; font-weight: 800; background: #f0f4f8; color: var(--navy); padding: 5px 12px; border-radius: 20px; letter-spacing: 1px;">
+                {{ group.get_join_status_display|upper }}
+            </span>
+        </div>
+        
+        <p style="font-size: 14px; color: #666; flex: 1; line-height: 1.6;">
+            {{ group.description|default:"Active research group exploring professional fellowship outcomes and mentorship tracks." }}
+        </p>
+
+        <div style="margin: 20px 0; font-size: 13px; color: var(--navy); font-weight: 700; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-users" style="color: var(--gold);"></i> 
+            {{ group.member_count }} / {{ group.capacity }} Members
+        </div>
+
+        <!-- DYNAMIC BUTTON LOGIC FOR MENTEES -->
+        {% if user.role == 'mentee' %}
+            
+            {% if group.id in user_memberships %}
+                <!-- Case 1: Already a member -->
+                <button disabled style="background: #e8f5e9; color: #2e7d32; width: 100%; border: none; padding: 14px; border-radius: 12px; font-weight: 700; cursor: not-allowed; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                    <i class="fas fa-check-circle"></i> Already Joined
+                </button>
+
+            {% elif group.id in user_requests %}
+                <!-- Case 2: Request is pending approval -->
+                <button disabled style="background: #fff3e0; color: #e65100; width: 100%; border: none; padding: 14px; border-radius: 12px; font-weight: 700; cursor: not-allowed; display: flex; align-items: center; justify-content: center; gap: 10px; animation: logoPulse 2s infinite;">
+                    <i class="fas fa-hourglass-half"></i> Awaiting Approval
+                </button>
+
+            {% elif group.member_count >= group.capacity %}
+                <!-- Case 3: Group is full -->
+                <button disabled style="background: #f5f5f5; color: #999; width: 100%; border: none; padding: 14px; border-radius: 12px; font-weight: 700; cursor: not-allowed;">
+                    Group Capacity Full
+                </button>
+
+            {% else %}
+                <!-- Case 4: Available to join -->
+                <button onclick="openJoinModal('{{ group.id }}', '{{ group.name }}')" class="btn-join-active" style="background: var(--navy); color: white; width: 100%; border: none; padding: 14px; border-radius: 12px; cursor: pointer; font-weight: 700; transition: 0.3s; font-family: 'Lexend';">
+                    Join Research Track
+                </button>
+            {% endif %}
+
+        {% else %}
+            <!-- COORDINATOR/MENTOR/MANAGEMENT VIEW -->
+            <a href="{% url 'groups:group_detail' group.id %}" class="btn-manage" style="background: #f0f4f8; color: var(--navy); text-align: center; padding: 14px; border-radius: 12px; text-decoration: none; font-weight: 700; transition: 0.3s;">
+                <i class="fas fa-cog"></i> Manage Group
+            </a>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<!-- JOIN MODAL -->
+<div class="modal-overlay" id="joinModal">
+    <div class="modal-card">
+        <h2 id="modalGroupName" style="font-family: 'Lexend'; color: var(--navy); margin-top: 0; font-size: 24px;">Join Group</h2>
+        <p style="color: #666; font-size: 14px; margin-bottom: 25px; line-height: 1.5;">Introduce yourself to the group coordinator and explain why you are interested in this specific research track.</p>
+        
+        <form id="joinForm" method="post">
+            {% csrf_token %}
+            <textarea name="message" required style="width: 100%; height: 120px; border: 2px solid #eee; border-radius: 15px; padding: 15px; font-family: inherit; font-size: 14px; margin-bottom: 20px; transition: 0.3s; resize: none;" placeholder="Example: I have a strong background in this area and would like to contribute..."></textarea>
+            
+            <div style="display: flex; gap: 12px;">
+                <button type="button" onclick="closeJoinModal()" style="flex: 1; background: #f5f5f5; color: #666; border: none; padding: 14px; border-radius: 12px; cursor: pointer; font-weight: 700; transition: 0.3s;">Cancel</button>
+                <button type="submit" style="flex: 2; background: var(--navy); color: white; border: none; padding: 14px; border-radius: 12px; cursor: pointer; font-weight: 700; transition: 0.3s; font-family: 'Lexend';">Send Application</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openJoinModal(id, name) {
+        document.getElementById('modalGroupName').innerText = "Join " + name;
+        // The URL is constructed dynamically
+        document.getElementById('joinForm').action = "/groups/" + id + "/join/";
+        document.getElementById('joinModal').style.display = "flex";
+        // Disable body scroll when modal is open
+        document.body.style.overflow = "hidden";
+    }
+
+    function closeJoinModal() {
+        document.getElementById('joinModal').style.display = "none";
+        // Re-enable body scroll
+        document.body.style.overflow = "auto";
+    }
+
+    // Close modal if user clicks on the darkened overlay
+    window.onclick = function(event) {
+        let modal = document.getElementById('joinModal');
+        if (event.target == modal) {
+            closeJoinModal();
+        }
+    }
+</script>
+{% endblock %}

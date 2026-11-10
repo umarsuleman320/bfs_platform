@@ -1,0 +1,277 @@
+{% extends 'base.html' %}
+{% block header_title %}Professional Identity{% endblock %}
+
+{% block content %}
+<style>
+    /* --- ADVANCED ANIMATIONS --- */
+    @keyframes slideInRight {
+        from { opacity: 0; transform: translateX(50px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes popIn {
+        0% { transform: scale(0.8); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes borderGlow {
+        0%, 100% { border-color: var(--line); }
+        50% { border-color: var(--gold); }
+    }
+
+    .profile-layout {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        gap: 30px;
+        perspective: 1000px;
+    }
+
+    /* --- LEFT PORTFOLIO CARD --- */
+    .portfolio-card {
+        background: white;
+        border-radius: 24px;
+        padding: 40px 30px;
+        text-align: center;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+        height: fit-content;
+        position: sticky;
+        top: 20px;
+        animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .profile-frame {
+        width: 150px;
+        height: 150px;
+        margin: 0 auto 20px;
+        position: relative;
+        padding: 5px;
+        border: 2px dashed var(--gold);
+        border-radius: 50%;
+        animation: borderGlow 4s infinite;
+    }
+
+    .profile-frame img, .profile-frame .placeholder {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        background: var(--navy);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 50px;
+        font-weight: bold;
+    }
+
+    .social-pills {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        margin-top: 25px;
+    }
+
+    .social-pill {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg);
+        color: var(--navy);
+        text-decoration: none;
+        transition: 0.4s;
+        border: 1px solid var(--line);
+    }
+
+    .social-pill:hover {
+        background: var(--navy);
+        color: white;
+        transform: translateY(-5px) rotate(10deg);
+    }
+
+    /* --- RIGHT EDITING SUITE --- */
+    .edit-suite {
+        animation: slideInRight 0.8s ease-out;
+    }
+
+    .form-section {
+        background: white;
+        border-radius: 24px;
+        padding: 40px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+        margin-bottom: 25px;
+    }
+
+    .section-title {
+        font-family: 'Lexend';
+        color: var(--navy);
+        font-size: 20px;
+        margin-bottom: 25px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .section-title i { color: var(--gold); }
+
+    .grid-inputs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .input-wrapper { margin-bottom: 20px; }
+    .input-wrapper label {
+        display: block;
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        color: #888;
+        margin-bottom: 8px;
+        letter-spacing: 1px;
+    }
+
+    .input-wrapper input, .input-wrapper textarea {
+        width: 100%;
+        padding: 14px 18px;
+        border: 2px solid #f0f3f2;
+        border-radius: 14px;
+        font-family: inherit;
+        font-size: 14px;
+        transition: 0.3s;
+        background: #fdfdfd;
+    }
+
+    .input-wrapper input:focus {
+        border-color: var(--navy);
+        background: white;
+        outline: none;
+        box-shadow: 0 10px 20px rgba(0, 51, 102, 0.05);
+    }
+
+    .btn-update {
+        background: linear-gradient(135deg, var(--navy), #004d99);
+        color: white;
+        border: none;
+        padding: 18px;
+        width: 100%;
+        border-radius: 16px;
+        font-family: 'Lexend';
+        font-weight: 700;
+        font-size: 16px;
+        cursor: pointer;
+        transition: 0.4s;
+        box-shadow: 0 15px 30px rgba(0, 51, 102, 0.2);
+    }
+
+    .btn-update:hover {
+        background: var(--gold);
+        transform: translateY(-3px);
+        box-shadow: 0 15px 30px rgba(255, 153, 0, 0.3);
+    }
+
+    /* --- MOBILE RESPONSIVENESS --- */
+    @media (max-width: 992px) {
+        .profile-layout { grid-template-columns: 1fr; }
+        .portfolio-card { position: static; }
+        .grid-inputs { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="profile-layout">
+    
+    <!-- LEFT SIDE: PORTFOLIO PREVIEW -->
+    <aside class="portfolio-card">
+        <div class="profile-frame">
+            {% if user.avatar_url %}
+                <img src="{{ user.avatar_url }}" alt="Avatar">
+            {% else %}
+                <div class="placeholder">{{ user.username|first|upper }}</div>
+            {% endif %}
+        </div>
+        
+        <h2 style="font-family: 'Lexend'; color: var(--navy); margin-bottom: 5px;">
+            {{ user.get_full_name|default:user.username }}
+        </h2>
+        <span style="color: var(--gold); font-weight: 800; font-size: 12px; letter-spacing: 1px; text-transform: uppercase;">
+            {{ user.get_role_display }}
+        </span>
+
+        <p style="color: #666; font-size: 14px; line-height: 1.6; margin-top: 20px;">
+            {{ user.bio|default:"Describe your research interests and professional goals here." }}
+        </p>
+
+        <div class="social-pills">
+            {% if user.linkedin_url %}
+                <a href="{{ user.linkedin_url }}" target="_blank" class="social-pill" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+            {% endif %}
+            {% if user.github_url %}
+                <a href="{{ user.github_url }}" target="_blank" class="social-pill" title="GitHub"><i class="fab fa-github"></i></a>
+            {% endif %}
+            {% if user.cv_url %}
+                <a href="{{ user.cv_url }}" target="_blank" class="social-pill" title="View CV"><i class="fas fa-file-pdf"></i></a>
+            {% endif %}
+        </div>
+    </aside>
+
+    <!-- RIGHT SIDE: EDITING SUITE -->
+    <main class="edit-suite">
+        <form method="post">
+            {% csrf_token %}
+            
+            <!-- Section 1: Basic Info -->
+            <div class="form-section">
+                <div class="section-title"><i class="fas fa-user-circle"></i> Basic Information</div>
+                <div class="grid-inputs">
+                    <div class="input-wrapper">
+                        <label>First Name</label>
+                        <input type="text" name="first_name" value="{{ user.first_name }}" placeholder="Your first name">
+                    </div>
+                    <div class="input-wrapper">
+                        <label>Last Name</label>
+                        <input type="text" name="last_name" value="{{ user.last_name }}" placeholder="Your surname">
+                    </div>
+                </div>
+                <div class="input-wrapper">
+                    <label>Phone Number</label>
+                    <input type="text" name="phone" value="{{ user.phone }}" placeholder="+234 ...">
+                </div>
+                <div class="input-wrapper">
+                    <label>Professional Bio</label>
+                    <textarea name="bio" rows="4" placeholder="Tell the fellowship about your background...">{{ user.bio }}</textarea>
+                </div>
+            </div>
+
+            <!-- Section 2: Links -->
+            <div class="form-section">
+                <div class="section-title"><i class="fas fa-link"></i> Professional Track Record</div>
+                <p style="font-size: 12px; color: #888; margin-bottom: 20px;">Provide links to your external work hosted on OneDrive, GitHub, or LinkedIn.</p>
+                
+                <div class="grid-inputs">
+                    <div class="input-wrapper">
+                        <label>Profile Photo (Direct URL)</label>
+                        <input type="url" name="avatar_url" value="{{ user.avatar_url }}" placeholder="OneDrive link to your photo">
+                    </div>
+                    <div class="input-wrapper">
+                        <label>CV/Resume Link</label>
+                        <input type="url" name="cv_url" value="{{ user.cv_url }}" placeholder="OneDrive link to your CV">
+                    </div>
+                    <div class="input-wrapper">
+                        <label>LinkedIn Profile</label>
+                        <input type="url" name="linkedin_url" value="{{ user.linkedin_url }}" placeholder="https://linkedin.com/in/yourname">
+                    </div>
+                    <div class="input-wrapper">
+                        <label>GitHub or Portfolio</label>
+                        <input type="url" name="github_url" value="{{ user.github_url }}" placeholder="https://github.com/yourname">
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-update">
+                <i class="fas fa-save" style="margin-right: 10px;"></i> Save Professional Profile
+            </button>
+        </form>
+    </main>
+
+</div>
+{% endblock %}

@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block header_title %}Task Control Center{% endblock %}
+
+{% block content %}
+<style>
+    /* --- ADVANCED LAYOUT ENGINE --- */
+    .manager-header { 
+        background: linear-gradient(135deg, var(--navy), #004d99); 
+        color: white; padding: 45px; border-radius: 28px; 
+        display: flex; justify-content: space-between; align-items: center; 
+        margin-bottom: 35px; border-bottom: 5px solid var(--gold);
+        position: relative; overflow: hidden;
+        animation: fadeInUp 0.8s ease;
+        box-shadow: 0 15px 35px rgba(0, 51, 102, 0.15);
+    }
+    
+    .manager-header::after {
+        content: ""; position: absolute; right: -30px; top: -30px; width: 150px; height: 150px;
+        background: rgba(255, 255, 255, 0.05); border-radius: 50%;
+    }
+
+    @media (max-width: 992px) { 
+        .manager-header { flex-direction: column; text-align: center; gap: 25px; padding: 30px; }
+        .manager-header div { width: 100%; }
+        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    }
+
+    /* --- PROGRESS BAR STYLING --- */
+    .prog-track { background: #eee; height: 6px; border-radius: 10px; width: 100px; overflow: hidden; margin-top: 5px; }
+    .prog-fill { background: var(--success); height: 100%; transition: width 1s ease-in-out; }
+
+    /* --- MODAL SYSTEM --- */
+    .modal-overlay {
+        position: fixed; inset: 0; background: rgba(0,26,51,0.85);
+        backdrop-filter: blur(12px); display: none; align-items: center; justify-content: center; z-index: 2000;
+        padding: 20px;
+    }
+    .modal-card {
+        background: white; border-radius: 30px; width: 100%; max-width: 600px;
+        padding: 40px; box-shadow: 0 30px 70px rgba(0,0,0,0.5);
+        max-height: 90vh; overflow-y: auto;
+        animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .input-field {
+        width: 100%; padding: 15px; border: 2px solid #f0f0f0; border-radius: 14px;
+        font-family: inherit; font-size: 14px; margin-bottom: 20px; transition: 0.3s;
+    }
+    .input-field:focus { border-color: var(--gold); outline: none; box-shadow: 0 0 15px rgba(255,153,0,0.1); }
+</style>
+
+<!-- COMMAND HEADER -->
+<div class="manager-header">
+    <div style="position: relative; z-index: 2;">
+        <h1 style="margin: 0; font-family: 'Lexend'; font-size: 32px; letter-spacing: -1px;">Assignment Hub</h1>
+        <p style="opacity: 0.8; font-size: 15px; margin-top: 5px; font-weight: 400;">Global oversight of fellowship deliverables and track-wide progress.</p>
+    </div>
+    <button onclick="openCreateTaskModal()" class="btn-gold" style="padding: 18px 35px; border-radius: 16px; font-weight: 800; font-size: 13px; letter-spacing: 1px;">
+        <i class="fas fa-plus-circle" style="margin-right: 8px;"></i> INITIALISE NEW TASK
+    </button>
+</div>
+
+<!-- GLOBAL TASK BOARD -->
+<div class="card" style="padding: 0; overflow: hidden; animation: fadeInUp 1s ease;">
+    <div style="padding: 25px; background: #fafafa; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin: 0; font-family: 'Lexend'; color: var(--navy); font-size: 18px;">Active Milestone Records</h3>
+        <div style="display: flex; gap: 10px;">
+            <span style="font-size: 11px; font-weight: 800; color: #aaa;"><i class="fas fa-circle" style="color: var(--success);"></i> COMPLETED</span>
+            <span style="font-size: 11px; font-weight: 800; color: #aaa;"><i class="fas fa-circle" style="color: var(--navy);"></i> PENDING</span>
+        </div>
+    </div>
+    
+    <div class="table-responsive">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="text-align: left; font-size: 11px; color: #aaa; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #eee;">
+                    <th style="padding: 20px 25px;">Track Assignment</th>
+                    <th>Distribution</th>
+                    <th>Deadline</th>
+                    <th style="text-align: right; padding-right: 25px;">Velocity</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for task in tasks %}
+                <tr style="border-bottom: 1px solid #f9f9f9; transition: 0.3s;" onmouseover="this.style.background='#fcfdfd'">
+                    <td style="padding: 20px 25px;">
+                        <div style="font-weight: 800; color: var(--navy); font-size: 16px; font-family: 'Lexend';">{{ task.title }}</div>
+                        <div style="font-size: 12px; color: var(--gold); font-weight: 700; margin-top: 4px;">{{ task.category|upper }}</div>
+                    </td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="width: 30px; height: 30px; background: var(--bg); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--navy);">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div>
+                                <div style="font-size: 13px; font-weight: 700; color: var(--navy);">{{ task.get_target_type_display }}</div>
+                                <div style="font-size: 11px; color: #888;">{{ task.target_group.name|default:"Direct Entry" }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="font-size: 13px; color: var(--navy); font-weight: 600;">
+                        <i class="far fa-calendar-alt" style="margin-right: 5px; color: #ccc;"></i> {{ task.deadline|date:"M d, Y" }}
+                    </td>
+                    <td style="text-align: right; padding-right: 25px;">
+                        <div style="display: inline-block; text-align: left;">
+                            <div style="font-size: 11px; font-weight: 800; color: var(--navy);">
+                                {{ task.done }} / {{ task.total }} <small style="color:#aaa;">DONE</small>
+                            </div>
+                            <div class="prog-track">
+                                <!-- Percentage Formula logic -->
+                                <div class="prog-fill" style="width: {% widthratio task.done task.total 100 %}%;"></div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="padding: 80px 20px; text-align: center; color: #bbb;">
+                        <i class="fas fa-tasks" style="font-size: 40px; display: block; margin-bottom: 20px; opacity: 0.2;"></i>
+                        <div style="font-weight: 700; font-size: 18px;">No Data to Display</div>
+                        <p style="font-size: 14px;">Initialise your first track assignment using the button above.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- CREATE TASK MODAL -->
+<div class="modal-overlay" id="createTaskModal">
+    <div class="modal-card">
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 30px;">
+            <div>
+                <h2 style="font-family: 'Lexend'; color: var(--navy); margin: 0; font-size: 26px;">Initialize Assignment</h2>
+                <p style="color: #888; font-size: 14px; margin-top: 5px;">Distribute a research task across specific tracks.</p>
+            </div>
+            <button onclick="closeCreateTaskModal()" style="background: none; border: none; font-size: 28px; color: #ddd; cursor: pointer;">&times;</button>
+        </div>
+        
+        <form action="{% url 'tasks:initialize_task' %}" method="post">
+            {% csrf_token %}
+            
+            <label class="form-label" style="font-size: 11px; font-weight: 800; color: #aaa; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 10px;">Assignment Title</label>
+            <input type="text" name="title" class="input-field" placeholder="e.g. Unit A: Manuscript Finalization" required>
+            
+            <label class="form-label" style="font-size: 11px; font-weight: 800; color: #aaa; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 10px;">Mission Description & Instructions</label>
+            <textarea name="description" class="input-field" style="height: 120px; resize: none;" placeholder="Outline deliverables and OneDrive naming conventions..."></textarea>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 10px;">
+                <div>
+                    <label class="form-label" style="font-size: 11px; font-weight: 800; color: #aaa; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 10px;">Target Audience</label>
+                    <select name="target_type" class="input-field" id="target_type" onchange="toggleGroupSelect()">
+                        <option value="group">Entire Unit/Group</option>
+                        <option value="individual">Individual Fellow</option>
+                    </select>
+                </div>
+                <div id="group_select_div">
+                    <label class="form-label" style="font-size: 11px; font-weight: 800; color: #aaa; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 10px;">Select Track</label>
+                    <select name="group_id" class="input-field">
+                        {% for g in recent_groups %}
+                            <option value="{{ g.id }}">{{ g.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <label class="form-label" style="font-size: 11px; font-weight: 800; color: #aaa; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 10px;">Deadline</label>
+                    <input type="date" name="deadline" class="input-field" required>
+                </div>
+                <div>
+                    <label class="form-label" style="font-size: 11px; font-weight: 800; color: #aaa; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 10px;">XP Points</label>
+                    <input type="number" name="points_possible" class="input-field" value="20" min="1">
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 15px; margin-top: 15px;">
+                <button type="button" onclick="closeCreateTaskModal()" style="flex:1; background:#f5f5f5; color: #777; border:none; padding:18px; border-radius:18px; font-weight:800; cursor:pointer;">CANCEL</button>
+                <button type="submit" class="btn-gold" style="flex:2; padding:18px; font-weight: 900; letter-spacing: 1px;">INITIALISE DISTRIBUTON</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openCreateTaskModal() { 
+        document.getElementById('createTaskModal').style.display = 'flex'; 
+        document.body.style.overflow = 'hidden'; 
+    }
+    function closeCreateTaskModal() { 
+        document.getElementById('createTaskModal').style.display = 'none'; 
+        document.body.style.overflow = 'auto'; 
+    }
+    function toggleGroupSelect() {
+        const type = document.getElementById('target_type').value;
+        document.getElementById('group_select_div').style.opacity = (type === 'group') ? '1' : '0.3';
+        document.getElementById('group_select_div').style.pointerEvents = (type === 'group') ? 'auto' : 'none';
+    }
+</script>
+{% endblock %}

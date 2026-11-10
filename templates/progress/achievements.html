@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% block header_title %}Mentee Achievements & Milestones{% endblock %}
+
+{% block content %}
+<style>
+    .ach-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; margin-bottom: 30px; }
+    .ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 22px; margin-bottom: 40px; }
+    .ach-card {
+        background: white; border-radius: 24px; padding: 26px; border: 1px solid var(--line);
+        box-shadow: 0 10px 30px rgba(0, 51, 102, 0.04); transition: 0.3s;
+        border-left: 6px solid #2ecc71; display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .ach-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0, 51, 102, 0.08); }
+    .ach-card.pending { border-left-color: var(--gold); background: #fffcf7; }
+    .category-pill {
+        font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 20px;
+        background: #f1f5f9; color: var(--navy); text-transform: uppercase; letter-spacing: 0.8px;
+    }
+    .btn-submit-ach {
+        padding: 10px 20px; border-radius: 12px; background: var(--gold); color: white;
+        text-decoration: none; font-size: 13px; font-weight: 700; display: inline-flex;
+        align-items: center; gap: 8px; transition: 0.3s;
+    }
+    .btn-submit-ach:hover { background: #e68a00; transform: translateY(-2px); }
+</style>
+
+<div class="ach-header">
+    <div>
+        <h2 style="margin: 0; font-family: 'Lexend'; color: var(--navy);">Achievements & Verified Milestones</h2>
+        <p style="margin: 5px 0 0; color: #64748b; font-size: 14px;">Track employment offers, research papers, certifications, awards, and project completions.</p>
+    </div>
+    {% if user.role == 'mentee' %}
+    <div>
+        <a href="{% url 'progress:submit_achievement' %}" class="btn-submit-ach">
+            <i class="fas fa-medal"></i> Record New Achievement
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- PENDING VERIFICATIONS QUEUE (FOR MENTORS & LEADERS) -->
+{% if pending_achievements.exists %}
+<div style="margin-bottom: 35px;">
+    <h3 style="margin: 0 0 16px; font-family: 'Lexend'; color: var(--navy); font-size: 18px;">
+        <i class="fas fa-hourglass-half" style="color: var(--gold);"></i> Pending Verification Queue ({{ pending_achievements.count }})
+    </h3>
+
+    <div class="ach-grid">
+        {% for a in pending_achievements %}
+        <div class="ach-card pending">
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                    <span class="category-pill">{{ a.get_category_display }}</span>
+                    <span style="font-size: 11px; font-weight: 800; color: var(--gold); background: var(--gold-soft); padding: 3px 10px; border-radius: 12px; text-transform: uppercase;">
+                        Pending Review
+                    </span>
+                </div>
+                <h4 style="margin: 0 0 6px; font-family: 'Lexend'; color: var(--navy); font-size: 17px;">{{ a.title }}</h4>
+                <div style="font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 10px;">
+                    {{ a.organisation|default:"Independent Milestone" }} • Fellow: <strong>{{ a.mentee.get_full_name|default:a.mentee.username }}</strong>
+                </div>
+                <p style="margin: 0 0 15px; color: #64748b; font-size: 13px; line-height: 1.5;">{{ a.description|truncatechars:120 }}</p>
+
+                <div style="font-size: 11.5px; color: #94a3b8; margin-bottom: 15px;">
+                    <i class="far fa-calendar-alt"></i> Achieved on: {{ a.achievement_date|date:"M d, Y" }}
+                </div>
+            </div>
+
+            <div>
+                {% if a.evidence_link %}
+                <a href="{{ a.evidence_link }}" target="_blank" style="padding: 7px 12px; border-radius: 10px; background: #e0f2fe; color: #0284c7; text-decoration: none; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 12px;">
+                    <i class="fas fa-external-link-alt"></i> View Supporting Evidence
+                </a>
+                {% endif %}
+
+                {% if user.role != 'mentee' %}
+                <div style="border-top: 1px solid var(--line); padding-top: 12px;">
+                    <form method="post" action="{% url 'progress:review_achievement' a.id %}">
+                        {% csrf_token %}
+                        <input type="text" name="review_notes" placeholder="Verification note / commendation..." style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line); font-size: 12px; margin-bottom: 8px; box-sizing: border-box;">
+                        <div style="display: flex; gap: 8px;">
+                            <button type="submit" name="action" value="approve" style="flex: 1; padding: 8px; border-radius: 8px; background: #16a34a; color: white; border: none; font-size: 12px; font-weight: 700; cursor: pointer;">
+                                <i class="fas fa-check"></i> Verify
+                            </button>
+                            <button type="submit" name="action" value="reject" style="flex: 1; padding: 8px; border-radius: 8px; background: white; border: 1px solid #fca5a5; color: #dc2626; font-size: 12px; font-weight: 700; cursor: pointer;">
+                                Decline
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- VERIFIED ACHIEVEMENTS SHOWCASE -->
+<h3 style="margin: 0 0 20px; font-family: 'Lexend'; color: var(--navy); font-size: 18px;">
+    Verified Milestones & Success Stories ({{ verified_achievements.count }})
+</h3>
+
+<div class="ach-grid">
+    {% for a in verified_achievements %}
+    <div class="ach-card">
+        <div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                <span class="category-pill">{{ a.get_category_display }}</span>
+                <span style="font-size: 11px; font-weight: 800; color: #16a34a; background: #dcfce7; padding: 3px 10px; border-radius: 12px; text-transform: uppercase;">
+                    <i class="fas fa-check-circle"></i> Verified
+                </span>
+            </div>
+            <h4 style="margin: 0 0 6px; font-family: 'Lexend'; color: var(--navy); font-size: 17px;">{{ a.title }}</h4>
+            <div style="font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 10px;">
+                {{ a.organisation|default:"BFS Fellow" }} • <strong>{{ a.mentee.get_full_name|default:a.mentee.username }}</strong>
+            </div>
+            <p style="margin: 0 0 15px; color: #64748b; font-size: 13px; line-height: 1.5;">{{ a.description }}</p>
+
+            <div style="font-size: 11.5px; color: #94a3b8; margin-bottom: 15px;">
+                <i class="far fa-calendar-alt"></i> {{ a.achievement_date|date:"F Y" }}
+                {% if a.reviewed_by %} • Verified by: {{ a.reviewed_by.get_full_name|default:a.reviewed_by.username }}{% endif %}
+            </div>
+        </div>
+
+        {% if a.evidence_link %}
+        <div>
+            <a href="{{ a.evidence_link }}" target="_blank" style="padding: 8px 14px; border-radius: 10px; background: #f1f5f9; color: var(--navy); text-decoration: none; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fas fa-link"></i> Supporting Document
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    {% empty %}
+    <div style="grid-column: 1 / -1; background: white; border-radius: 24px; padding: 50px; text-align: center; border: 1px solid var(--line);">
+        <i class="fas fa-trophy" style="font-size: 40px; color: #cbd5e1; margin-bottom: 15px; display: block;"></i>
+        <h4 style="margin: 0; font-family: 'Lexend'; color: var(--navy);">No Verified Milestones Yet</h4>
+        <p style="margin: 6px 0 0; color: #64748b; font-size: 14px;">Mentees can record their job offers, published papers, awards, and project completions.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

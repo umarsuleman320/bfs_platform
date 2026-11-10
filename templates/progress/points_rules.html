@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block header_title %}Configurable Scoring Engine{% endblock %}
+
+{% block content %}
+<style>
+    .rules-card {
+        max-width: 750px; margin: 0 auto; background: white;
+        padding: 40px; border-radius: 28px; border: 1px solid var(--line);
+        box-shadow: 0 15px 35px rgba(0, 51, 102, 0.05);
+    }
+    .rule-row {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 16px 20px; border-radius: 14px; background: #f8fafc;
+        border: 1px solid var(--line); margin-bottom: 12px;
+    }
+    .rule-input {
+        width: 90px; padding: 10px; border: 1.5px solid var(--line);
+        border-radius: 10px; font-size: 15px; font-weight: 800; text-align: center;
+        color: var(--navy); font-family: 'Lexend';
+    }
+    .rule-input:focus { outline: none; border-color: var(--gold); }
+</style>
+
+<div class="rules-card">
+    <div style="text-align: center; margin-bottom: 30px;">
+        <div style="width: 55px; height: 55px; border-radius: 18px; background: var(--navy); color: var(--gold); display: inline-flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 12px;">
+            <i class="fas fa-sliders-h"></i>
+        </div>
+        <h2 style="margin: 0; font-family: 'Lexend'; color: var(--navy);">Points & Scoring Rules</h2>
+        <p style="margin: 6px 0 0; color: #64748b; font-size: 14px;">
+            Configure the XP weights awarded for milestones, tasks, and streaks without redeploying code.
+        </p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        {% for rule in rules %}
+        <div class="rule-row">
+            <div>
+                <div style="font-weight: 800; color: var(--navy); font-size: 15px;">{{ rule.label }}</div>
+                <div style="font-size: 11px; color: #94a3b8; font-family: 'JetBrains Mono';">Key: {{ rule.action_key }}</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="number" name="rule_{{ rule.id }}" value="{{ rule.points }}" class="rule-input" required>
+                <span style="font-size: 13px; font-weight: 800; color: var(--gold);">XP</span>
+            </div>
+        </div>
+        {% empty %}
+        <p style="text-align: center; color: #64748b;">No configurable rules set up yet.</p>
+        {% endfor %}
+
+        {% if rules %}
+        <button type="submit" style="width: 100%; margin-top: 20px; padding: 15px; border-radius: 12px; background: var(--navy); color: white; border: none; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.3s;">
+            <i class="fas fa-save"></i> Save Scoring Formula
+        </button>
+        {% endif %}
+    </form>
+</div>
+{% endblock %}

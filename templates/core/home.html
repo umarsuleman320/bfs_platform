@@ -1,0 +1,158 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BFS Mentorship Programme — Excellence in Research & Industry</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy: #003366;
+            --navy-dark: #001a33;
+            --gold: #FF9900;
+            --gold-soft: rgba(255, 153, 0, 0.12);
+            --bg: #F4F7F9;
+            --line: #E0E6ED;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: #1e293b; line-height: 1.6; }
+        
+        .navbar {
+            background: white; border-bottom: 1px solid var(--line);
+            padding: 18px 40px; display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 100;
+        }
+        .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .brand img { width: 42px; height: 42px; border-radius: 50%; border: 2px solid var(--gold); }
+        .brand span { font-family: 'Lexend'; font-weight: 800; font-size: 20px; color: var(--navy); }
+
+        .btn-nav {
+            padding: 10px 22px; border-radius: 12px; font-weight: 700; font-size: 14px;
+            text-decoration: none; transition: 0.3s;
+        }
+        .btn-login { background: transparent; color: var(--navy); border: 1.5px solid var(--navy); margin-right: 10px; }
+        .btn-login:hover { background: var(--navy); color: white; }
+        .btn-register { background: var(--gold); color: white; border: none; }
+        .btn-register:hover { background: #e68a00; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(255, 153, 0, 0.3); }
+
+        .hero {
+            background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 100%);
+            color: white; padding: 100px 30px; text-align: center; border-bottom: 5px solid var(--gold);
+        }
+        .hero h1 { font-family: 'Lexend'; font-size: 46px; font-weight: 800; margin-bottom: 18px; letter-spacing: -1px; }
+        .hero p { font-size: 19px; max-width: 750px; margin: 0 auto 35px; color: rgba(255,255,255,0.85); }
+
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px; max-width: 1050px; margin: -50px auto 70px; padding: 0 20px;
+        }
+        .stat-card {
+            background: white; border-radius: 20px; padding: 30px 20px; text-align: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.06); border: 1px solid var(--line);
+        }
+        .stat-card .val { font-size: 40px; font-weight: 900; color: var(--navy); font-family: 'Lexend'; }
+        .stat-card .lbl { font-size: 12px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-top: 6px; }
+
+        .section { max-width: 1100px; margin: 0 auto 80px; padding: 0 20px; }
+        .section-title { font-family: 'Lexend'; font-size: 32px; color: var(--navy); text-align: center; margin-bottom: 12px; font-weight: 800; }
+        .section-subtitle { text-align: center; color: #64748b; font-size: 16px; margin-bottom: 50px; }
+
+        .tracks-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; }
+        .track-card {
+            background: white; border-radius: 24px; padding: 32px; border: 1px solid var(--line);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03); border-top: 6px solid var(--gold);
+        }
+
+        footer { background: var(--navy-dark); color: rgba(255,255,255,0.7); padding: 50px 20px; text-align: center; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="/" class="brand">
+            <img src="{% static 'images/logo.jpg' %}" alt="BFS Logo">
+            <span>BFS PLATFORM</span>
+        </a>
+        <div>
+            <a href="{% url 'core:wall_of_fame' %}" class="btn-nav" style="color: var(--navy); margin-right: 15px;"><i class="fas fa-trophy"></i> Wall of Fame</a>
+            <a href="{% url 'accounts:login' %}" class="btn-nav btn-register"><i class="fas fa-sign-in-alt"></i> Fellow & Faculty Sign In</a>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <span style="font-size: 12px; font-weight: 800; color: var(--gold); text-transform: uppercase; letter-spacing: 2.5px; display: inline-block; margin-bottom: 12px;">
+            Mentorship & Research Management Ecosystem
+        </span>
+        <h1>Bridging Fellows with World-Class Mentors</h1>
+        <p>A structured platform empowering research fellows, providing task accountability, cloud deliverables, progress analytics, and one-on-one mentorship.</p>
+        <div>
+            <a href="{% url 'accounts:login' %}" class="btn-nav btn-register" style="padding: 16px 36px; font-size: 16px;">
+                <i class="fas fa-sign-in-alt"></i> Access Fellowship Portal
+            </a>
+            <a href="{% url 'core:wall_of_fame' %}" class="btn-nav btn-login" style="padding: 16px 36px; font-size: 16px; color: white; border-color: rgba(255,255,255,0.4); margin-left: 12px;">
+                <i class="fas fa-trophy"></i> Explore Wall of Fame
+            </a>
+        </div>
+    </header>
+
+    <!-- LIVE METRICS STRIP -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="val">{{ total_mentees|default:"50+" }}</div>
+            <div class="lbl">Active Fellows</div>
+        </div>
+        <div class="stat-card">
+            <div class="val" style="color: var(--gold);">{{ total_mentors|default:"15+" }}</div>
+            <div class="lbl">Expert Mentors</div>
+        </div>
+        <div class="stat-card">
+            <div class="val" style="color: #0284c7;">{{ total_tracks|default:"5" }}</div>
+            <div class="lbl">Research Tracks</div>
+        </div>
+        <div class="stat-card">
+            <div class="val" style="color: #16a34a;">{{ total_achievements|default:"25+" }}</div>
+            <div class="lbl">Verified Milestones</div>
+        </div>
+    </div>
+
+    <!-- PROGRAMME TRACKS OVERVIEW -->
+    <section class="section">
+        <h2 class="section-title">Specialized Research Tracks</h2>
+        <p class="section-subtitle">Fellows collaborate in focused units under dedicated faculty supervision.</p>
+
+        <div class="tracks-grid">
+            {% for t in tracks %}
+            <div class="track-card">
+                <span style="font-size: 10px; font-weight: 800; background: var(--bg); color: var(--navy); padding: 4px 10px; border-radius: 12px; text-transform: uppercase;">
+                    Track Capacity: {{ t.capacity }}
+                </span>
+                <h3 style="margin: 12px 0 8px; font-family: 'Lexend'; color: var(--navy); font-size: 20px;">{{ t.name }}</h3>
+                <p style="margin: 0 0 16px; color: #64748b; font-size: 14px; line-height: 1.5;">
+                    {{ t.description|default:"Structured mentorship track covering technical deliverables, publications, and milestone reviews." }}
+                </p>
+                <div style="font-size: 12px; color: var(--navy); font-weight: 700;">
+                    <i class="fas fa-user-tie" style="color: var(--gold);"></i> Lead Mentor: {{ t.mentor.get_full_name|default:"Assigned Faculty" }}
+                </div>
+            </div>
+            {% empty %}
+            <div class="track-card">
+                <h3 style="margin: 0 0 8px; font-family: 'Lexend'; color: var(--navy);">Programming & Systems Track</h3>
+                <p style="color: #64748b; font-size: 14px;">Software engineering, distributed algorithms, and cloud solutions.</p>
+            </div>
+            <div class="track-card">
+                <h3 style="margin: 0 0 8px; font-family: 'Lexend'; color: var(--navy);">Research Paper Track</h3>
+                <p style="color: #64748b; font-size: 14px;">Academic literature, methodological rigor, and journal publication prep.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <footer>
+        <p style="margin-bottom: 8px;"><strong>BFS Mentorship Programme</strong> &copy; 2026. All Rights Reserved.</p>
+        <p style="font-size: 12px;">Delivering high-impact mentorship, research acceleration, and career milestones.</p>
+    </footer>
+
+</body>
+</html>

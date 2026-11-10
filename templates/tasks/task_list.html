@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% block header_title %}Task Repository{% endblock %}
+
+{% block content %}
+<style>
+    .task-tabs { display: flex; gap: 10px; margin-bottom: 30px; overflow-x: auto; }
+    .tab-btn { padding: 10px 20px; border-radius: 25px; border: 2px solid #eee; background: white; font-weight: 700; cursor: pointer; transition: 0.3s; }
+    .tab-btn.active { background: var(--navy); color: white; border-color: var(--navy); }
+    .task-card { display: none; margin-bottom: 15px; border-left: 8px solid var(--gold); }
+    .task-card.show { display: flex; justify-content: space-between; align-items: center; }
+</style>
+
+<div class="card" style="padding: 40px; animation: fadeInUp 0.8s ease;">
+    <h2 style="font-family: 'Lexend'; color: var(--navy); margin: 0 0 10px;">Assignment Terminal</h2>
+    <p style="color: #888; margin-bottom: 30px;">Manage and track all submissions for your enrolled research tracks.</p>
+
+    <div class="task-tabs">
+        <button class="tab-btn active" onclick="filterTasks('all', this)">All Assignments</button>
+        <button class="tab-btn" onclick="filterTasks('todo', this)">To-Do</button>
+        <button class="tab-btn" onclick="filterTasks('submitted', this)">Under Review</button>
+        <button class="tab-btn" onclick="filterTasks('completed', this)">Completed</button>
+    </div>
+
+    <div id="full-task-list">
+        {% for assignment in assignments %}
+            <div class="card task-card show" data-status="{{ assignment.status }}" style="padding: 22px 28px; background: white; border-radius: 20px; border: 1px solid var(--line); border-left: 6px solid var(--gold); margin-bottom: 15px;">
+                <div>
+                    <span style="font-size: 10px; font-weight: 800; color: var(--gold); text-transform: uppercase;">{{ assignment.get_status_display }} • {{ assignment.task.points_possible }} XP</span>
+                    <h4 style="margin: 5px 0; color: var(--navy); font-family: 'Lexend'; font-size: 17px;">{{ assignment.task.title }}</h4>
+                    <div style="font-size: 12px; color: #64748b;">
+                        <i class="far fa-clock"></i> Due: {{ assignment.task.deadline|date:"M d, Y H:i" }}
+                        {% if assignment.task.category %} • Category: {{ assignment.task.category }}{% endif %}
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <a href="{% url 'tasks:task_detail' assignment.id %}" style="padding: 8px 16px; border-radius: 10px; font-size: 12px; font-weight: 700; text-decoration: none; border: 1px solid var(--line); color: var(--navy); background: white;">
+                        View Brief
+                    </a>
+                    {% if assignment.status == 'todo' or assignment.status == 'resubmission' or assignment.status == 'overdue' %}
+                        <button onclick="openSubmitModal('{{ assignment.id }}', '{{ assignment.task.title|escapejs }}')" style="padding: 8px 18px; border-radius: 10px; font-size: 12px; font-weight: 700; background: var(--gold); color: white; border: none; cursor: pointer;">
+                            {% if assignment.status == 'resubmission' %}Resubmit{% else %}Submit Work{% endif %}
+                        </button>
+                    {% elif assignment.latest_submission %}
+                        <a href="{{ assignment.latest_submission.onedrive_link }}" target="_blank" style="padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 700; text-decoration: none; background: #e0f2fe; color: #0284c7;">
+                            <i class="fas fa-external-link-alt"></i> v{{ assignment.latest_submission.version }}
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        {% empty %}
+            <div style="text-align: center; padding: 40px; color: #64748b;">
+                <i class="fas fa-clipboard-check" style="font-size: 36px; color: #cbd5e1; margin-bottom: 12px; display: block;"></i>
+                No assignments found in this view.
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- SUBMISSION MODAL -->
+<div id="submitModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 26, 51, 0.85); backdrop-filter: blur(10px); align-items: center; justify-content: center; z-index: 2500; padding: 20px;">
+    <div style="background: white; border-radius: 28px; width: 100%; max-width: 550px; padding: 35px; box-shadow: 0 25px 60px rgba(0,0,0,0.3);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin: 0; font-family: 'Lexend'; color: var(--navy); font-size: 20px;">Submit Deliverable</h3>
+            <button onclick="closeSubmitModal()" style="background: none; border: none; font-size: 20px; color: #94a3b8; cursor: pointer;">&times;</button>
+        </div>
+        <p id="modalTaskTitle" style="color: var(--gold); font-weight: 700; margin-top: 0; margin-bottom: 20px; font-size: 14px;"></p>
+        
+        <form id="submissionForm" method="post" action="">
+            {% csrf_token %}
+            <div style="margin-bottom: 18px;">
+                <label style="display: block; font-size: 11px; font-weight: 800; color: var(--navy); text-transform: uppercase; margin-bottom: 8px;">OneDrive / SharePoint Share Link</label>
+                <input type="url" name="onedrive_link" placeholder="https://onedrive.live.com/... or SharePoint URL" required style="width: 100%; padding: 13px 16px; border: 1.5px solid var(--line); border-radius: 12px; font-size: 14px; box-sizing: border-box;">
+                <span style="font-size: 11px; color: #64748b; margin-top: 4px; display: block;">Make sure link sharing permission is set to "Anyone with the link can view".</span>
+            </div>
+
+            <div style="margin-bottom: 22px;">
+                <label style="display: block; font-size: 11px; font-weight: 800; color: var(--navy); text-transform: uppercase; margin-bottom: 8px;">Submission Notes / Summary</label>
+                <textarea name="mentee_notes" rows="3" placeholder="Summary of changes, methodology, or questions for mentor..." style="width: 100%; padding: 13px 16px; border: 1.5px solid var(--line); border-radius: 12px; font-size: 14px; font-family: inherit; box-sizing: border-box;"></textarea>
+            </div>
+
+            <button type="submit" style="width: 100%; padding: 14px; border-radius: 12px; background: var(--navy); color: white; border: none; font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.3s;">
+                <i class="fas fa-cloud-upload-alt"></i> Transmit Deliverable to Mentor
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function filterTasks(status, btn) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.task-card').forEach(card => {
+            if (status === 'all' || card.getAttribute('data-status') === status) card.classList.add('show');
+            else card.classList.remove('show');
+        });
+    }
+
+    function openSubmitModal(assignmentId, title) {
+        document.getElementById('modalTaskTitle').innerText = title;
+        document.getElementById('submissionForm').action = '/tasks/' + assignmentId + '/submit/';
+        const modal = document.getElementById('submitModal');
+        modal.style.display = 'flex';
+    }
+
+    function closeSubmitModal() {
+        document.getElementById('submitModal').style.display = 'none';
+    }
+</script>
+{% endblock %}

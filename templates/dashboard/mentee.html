@@ -1,0 +1,297 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block header_title %}Growth Workspace{% endblock %}
+
+{% block content %}
+<style>
+    /* --- CINEMATIC ANIMATION ENGINE --- */
+    @keyframes entryUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(25px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes pulseGlow { 0% { box-shadow: 0 0 0 0 rgba(255, 153, 0, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(255, 153, 0, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 153, 0, 0); } }
+
+    /* --- MASTER LAYOUT --- */
+    .dashboard-layout {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 30px;
+        animation: entryUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .main-canvas { grid-column: span 8; }
+    .side-rail { grid-column: span 4; }
+
+    /* Tablet & iPad Pro Optimization (1200px - 1024px) */
+    @media (max-width: 1200px) {
+        .main-canvas { grid-column: span 7; }
+        .side-rail { grid-column: span 5; }
+    }
+
+    /* iPad Vertical & Mobile */
+    @media (max-width: 1024px) {
+        .main-canvas, .side-rail { grid-column: span 12; }
+        .hero-section { flex-direction: column; }
+    }
+
+    /* --- HERO COMPONENTS --- */
+    .hero-section { display: flex; gap: 25px; margin-bottom: 35px; }
+    
+    .card-arc { 
+        flex: 1; text-align: center; background: white; padding: 40px; border-radius: 24px; 
+        border: 1px solid var(--line); border-bottom: 6px solid var(--gold);
+        display: flex; flex-direction: column; justify-content: center;
+    }
+    
+    .arc-box { position: relative; width: 150px; height: 150px; margin: 0 auto; }
+    .arc-svg { transform: rotate(-90deg); width: 100%; height: 100%; }
+    .arc-bg { fill: none; stroke: #f1f5f9; stroke-width: 12; }
+    .arc-fg { 
+        fill: none; stroke: var(--gold); stroke-width: 12; stroke-linecap: round; 
+        stroke-dasharray: 440; stroke-dashoffset: 440; 
+        transition: stroke-dashoffset 2s cubic-bezier(0.19, 1, 0.22, 1);
+    }
+
+    .card-dispatch { 
+        flex: 1.5; background: var(--navy-dark); color: white; border: none; 
+        position: relative; overflow: hidden; padding: 35px; border-radius: 24px;
+        border-left: 6px solid var(--gold);
+    }
+
+    /* --- KPI STRIP --- */
+    .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 35px; }
+    .kpi-card { background: white; padding: 22px; border-radius: 20px; border: 1px solid var(--line); text-align: center; transition: 0.3s ease; }
+    .kpi-card:hover { transform: translateY(-8px); border-color: var(--gold); box-shadow: 0 15px 35px rgba(0, 51, 102, 0.05); }
+    .kpi-card .val { font-size: 26px; font-weight: 900; color: var(--navy); display: block; font-family: 'Lexend'; }
+    .kpi-card .lbl { font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.2px; margin-top: 5px; }
+
+    /* --- ASSIGNMENT TERMINAL --- */
+    .terminal-container { background: white; border-radius: 28px; padding: 35px; border: 1px solid var(--line); border-top: 8px solid var(--navy); }
+    
+    .filter-scroll { display: flex; gap: 10px; margin-bottom: 25px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    .filter-scroll::-webkit-scrollbar { display: none; }
+    
+    .chip { 
+        padding: 12px 24px; border-radius: 30px; background: #f8fafc; border: 1.5px solid #edf2f7; 
+        font-size: 11px; font-weight: 800; color: #64748b; cursor: pointer; transition: 0.3s; 
+        white-space: nowrap; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .chip.active { background: var(--navy); color: white; border-color: var(--navy); box-shadow: 0 10px 25px rgba(0, 51, 102, 0.2); }
+
+    .task-node { 
+        display: none; justify-content: space-between; align-items: center; padding: 25px; 
+        background: #fdfdfd; border-radius: 22px; border: 1px solid #f1f5f9; margin-bottom: 15px;
+        transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1); border-left: 5px solid #d1d5db;
+    }
+    .task-node.visible { display: flex; animation: slideIn 0.5s ease backwards; }
+    .task-node:hover { border-color: var(--gold); transform: translateX(12px); background: white; box-shadow: 0 10px 30px rgba(0,0,0,0.04); }
+
+    .status-badge { font-size: 9px; font-weight: 900; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: inline-block; }
+    .badge-todo { background: var(--gold-soft); color: var(--gold); }
+    .badge-submitted { background: #e0f2fe; color: #0369a1; }
+    .badge-completed { background: #dcfce7; color: #15803d; }
+    .badge-overdue { background: #fee2e2; color: #b91c1c; animation: logoPulse 2s infinite; }
+
+    /* --- PODIUM --- */
+    .stand-box { display: flex; align-items: flex-end; justify-content: center; gap: 12px; margin: 35px 0; }
+    .pedestal { 
+        width: 65px; background: linear-gradient(to top, var(--navy), #004d99); border-radius: 12px 12px 0 0; 
+        color: white; display: flex; align-items: center; justify-content: center; font-weight: 900; font-family: 'Lexend'; position: relative; 
+    }
+    .ped-1 { height: 95px; border-top: 4px solid var(--gold); box-shadow: 0 10px 25px rgba(255, 153, 0, 0.2); }
+    .ped-2 { height: 70px; opacity: 0.85; }
+    .ped-3 { height: 50px; opacity: 0.7; }
+
+    /* --- MOBILE SPECIFICS --- */
+    @media (max-width: 600px) {
+        .kpi-row { grid-template-columns: 1fr 1fr; }
+        .task-node { flex-direction: column; align-items: stretch; gap: 15px; }
+        .node-actions { width: 100%; justify-content: space-between; border-top: 1px solid #f1f5f9; padding-top: 15px; }
+        .modal-card { padding: 30px 20px; }
+    }
+</style>
+
+<div class="dashboard-container">
+    
+    <!-- MAIN WORKSPACE -->
+    <div class="main-canvas">
+        
+        <!-- HERO AREA -->
+        <div class="hero-section">
+            <div class="card-arc">
+                <div class="arc-box">
+                    <svg class="arc-svg" viewBox="0 0 160 160">
+                        <circle class="arc-bg" cx="80" cy="80" r="70"></circle>
+                        <circle class="arc-fg" cx="80" cy="80" r="70" style="stroke-dashoffset: calc(440 - (440 * {{ stats.progress }} / 100));"></circle>
+                    </svg>
+                    <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <span style="font-size: 32px; font-weight: 900; color: var(--navy); font-family: 'Lexend';">{{ stats.progress }}%</span>
+                        <small style="color: #94a3b8; font-weight: 800; font-size: 9px; letter-spacing: 1px;">MILESTONES</small>
+                    </div>
+                </div>
+                <p style="margin-top: 25px; font-weight: 800; color: var(--navy); font-size: 14px;">{{ stats.completed }} Track Goals Certified</p>
+            </div>
+
+            <div class="card-dispatch">
+                <div style="position: relative; z-index: 2;">
+                    <span style="font-size: 10px; font-weight: 900; color: var(--gold); letter-spacing: 2px; text-transform: uppercase;">Executive Dispatch</span>
+                    <h3 style="margin: 10px 0; font-family: 'Lexend'; font-size: 20px; color: white;">Program Integrity Update</h3>
+                    <div style="margin-top: 20px; background: rgba(255,255,255,0.04); padding: 22px; border-radius: 18px; border-left: 4px solid var(--gold);">
+                        <p style="margin: 0; font-size: 13.5px; line-height: 1.7; opacity: 0.95;">Fellows are required to audit their OneDrive share settings. Restricted links will result in evaluation delays.</p>
+                        <div style="margin-top: 15px; font-size: 10px; font-weight: 800; color: var(--gold); text-transform: uppercase;">System Message • Just Now</div>
+                    </div>
+                </div>
+                <i class="fas fa-satellite-dish" style="position: absolute; right: -25px; bottom: -25px; font-size: 120px; color: rgba(255,255,255,0.02);"></i>
+            </div>
+        </div>
+
+        <!-- KPI ANALYTICS -->
+        <div class="kpi-row">
+            <div class="kpi-card"><span class="val">{{ stats.points }}</span><span class="lbl">Total XP</span></div>
+            <div class="kpi-card"><span class="val">#{{ stats.rank }}</span><span class="lbl">Ranking</span></div>
+            <div class="kpi-card"><span class="val">{{ stats.streak }}</span><span class="lbl">🔥 Streak</span></div>
+            <div class="kpi-card" style="border-bottom: 4px solid var(--danger);"><span class="val" style="color: var(--danger);">{{ stats.overdue }}</span><span class="lbl">Late</span></div>
+        </div>
+
+        <!-- ASSIGNMENT TERMINAL -->
+        <div class="terminal-container">
+            <div class="terminal-header">
+                <h3 style="font-family: 'Lexend'; color: var(--navy); margin: 0; font-size: 22px;">Assignment Terminal</h3>
+                <span class="navy-badge" style="letter-spacing: 1.5px;">{{ stats.todo }} ACTION ITEMS</span>
+            </div>
+
+            <div class="filter-scroll">
+                <div class="chip active" onclick="applyFilter('all', this)">All Assignments</div>
+                <div class="chip" onclick="applyFilter('todo', this)">To Do</div>
+                <div class="chip" onclick="applyFilter('submitted', this)">Reviewing</div>
+                <div class="chip" onclick="applyFilter('completed', this)">Certified</div>
+            </div>
+
+            <div id="mentee-task-stream">
+                {% for a in my_tasks %}
+                    <div class="task-node visible" data-status="{{ a.status }}" 
+                         style="border-left-color: {% if a.status == 'completed' %}#2ecc71{% elif a.status == 'overdue' %}#e74c3c{% else %}var(--gold){% endif %};">
+                        <div style="flex: 1; min-width: 0;">
+                            <span class="status-badge badge-{{ a.status }}">{{ a.get_status_display }}</span>
+                            <h4 style="margin: 5px 0; color: var(--navy); font-family: 'Lexend'; font-size: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ a.task.title }}</h4>
+                            <div style="font-size: 12.5px; color: #94a3b8; font-weight: 600;">
+                                <i class="far fa-calendar-alt"></i> Due: {{ a.task.deadline|date:"M d, Y" }}
+                            </div>
+                        </div>
+
+                        <div class="node-actions" style="display: flex; align-items: center; gap: 15px; margin-left: 20px;">
+                            {% if a.status == 'todo' or a.status == 'resubmission' %}
+                                <button onclick="launchSubmission('{{ a.id }}', '{{ a.task.title }}')" class="btn-gold" style="padding: 12px 28px; font-size: 11px; animation: pulseGlow 2s infinite; border:none; cursor:pointer; font-weight:800;">SUBMIT WORK</button>
+                            {% elif a.status == 'completed' %}
+                                <div style="text-align: right; background: #f0faf4; padding: 10px 20px; border-radius: 14px; border: 1.5px solid #dcfce7;">
+                                    <span style="font-weight: 900; color: #2ecc71; font-size: 20px; font-family:'Lexend';">{{ a.submissions.last.review.score|default:"0" }}<small style="font-size:12px;">/20</small></span>
+                                </div>
+                            {% endif %}
+                            <a href="{% url 'tasks:task_detail' a.id %}" style="color: var(--navy); font-size: 26px; transition: 0.3s;"><i class="fas fa-chevron-circle-right"></i></a>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div style="text-align: center; padding: 60px 20px; color: #94a3b8; border: 2px dashed #eee; border-radius: 20px;">No assignments found for your current track.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- SIDE RAIL -->
+    <div class="side-rail">
+        <!-- COHORT POSITION -->
+        <div class="card" style="text-align: center; border-top: 6px solid var(--navy);">
+            <h3 style="margin: 0; font-family: 'Lexend'; color: var(--navy); font-size: 18px;">Fellow Performance</h3>
+            <div class="stand-box">
+                <div class="pedestal ped-2">2</div>
+                <div class="pedestal ped-1"><i class="fas fa-crown" style="position:absolute; top:-28px; color:var(--gold); font-size:22px;"></i>1</div>
+                <div class="pedestal ped-3">3</div>
+            </div>
+            <div style="margin-top: 30px; padding-top: 25px; border-top: 1px solid #f1f5f9;">
+                <div style="font-size: 42px; font-weight: 900; color: var(--navy); font-family: 'Lexend';">Rank #{{ stats.rank }}</div>
+                <a href="{% url 'progress:leaderboard' %}" style="background: var(--gold-soft); color: var(--gold); display: inline-block; padding: 10px 25px; border-radius: 25px; font-weight: 800; font-size: 12px; margin-top: 15px; text-decoration: none; border: 1.5px solid var(--gold);">VIEW LEADERBOARD</a>
+            </div>
+        </div>
+
+        <!-- PERSONAL STRATEGY -->
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="color: var(--navy); font-family: 'Lexend'; margin: 0; font-size: 17px;"><i class="fas fa-thumbtack" style="color: var(--gold);"></i> Strategy</h3>
+                <span class="navy-badge" style="font-size: 9px;">PRIVATE</span>
+            </div>
+            {% for goal in goals %}
+                <div style="display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid #f8fafc;">
+                    <a href="{% url 'progress:toggle_goal' goal.id %}" class="goal-check {% if goal.status == 'completed' %}done{% endif %}" style="text-decoration: none;">
+                        {% if goal.status == 'completed' %}<i class="fas fa-check"></i>{% endif %}
+                    </a>
+                    <span style="font-size: 14.5px; font-weight: 600; color: {% if goal.status == 'completed' %}#cbd5e1{% else %}var(--navy){% endif %}; {% if goal.status == 'completed' %}text-decoration: line-through;{% endif %}">{{ goal.title }}</span>
+                </div>
+            {% endfor %}
+            <a href="{% url 'progress:goals' %}" style="display: block; text-align: center; margin-top: 25px; font-size: 11px; font-weight: 800; color: var(--navy); text-decoration: none; border: 1.5px dashed var(--navy); padding: 15px; border-radius: 16px; transition: 0.3s;" onmouseover="this.style.borderColor='var(--gold)'; this.style.color='var(--gold)';" onmouseout="this.style.borderColor='var(--navy)'; this.style.color='var(--navy)';">GOAL MANAGEMENT</a>
+        </div>
+
+        <!-- IDENTITY -->
+        <div class="card" style="background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%); border-left: 5px solid var(--navy);">
+            <h3 style="color: var(--navy); font-family: 'Lexend'; margin: 0 0 20px; font-size: 17px;">Research Identity</h3>
+            {% for m in memberships %}
+            <div style="margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #f1f5f9;">
+                <div style="font-weight: 800; color: var(--navy); font-size: 15px; font-family: 'Lexend';">{{ m.group.name }}</div>
+                <div style="font-size: 12.5px; color: #64748b; margin-top: 6px;">
+                    <i class="fas fa-user-tie" style="color: var(--gold);"></i> Lead Mentor: 
+                    <strong style="color: var(--navy);">{% if m.group.mentor %}{{ m.group.mentor.get_full_name|default:m.group.mentor.username }}{% else %}Assigning Soon{% endif %}</strong>
+                </div>
+                <a href="{% url 'groups:mentee_group_view' m.group.id %}" style="font-size: 10.5px; font-weight: 800; color: var(--gold); text-decoration: none; margin-top: 12px; display: inline-block; letter-spacing: 0.5px;">VIEW TRACK PEERS <i class="fas fa-arrow-right" style="font-size: 9px; margin-left: 5px;"></i></a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+
+<!-- SUPREME MODAL -->
+<div class="modal-overlay" id="submitModal">
+    <div class="modal-card">
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 35px;">
+            <div>
+                <h2 style="font-family: 'Lexend'; color: var(--navy); margin: 0; font-size: 26px;">Submit Deliverable</h2>
+                <p id="targetTaskTitle" style="color: var(--gold); font-weight: 800; font-size: 12.5px; margin-top: 10px; text-transform: uppercase; letter-spacing: 1.5px;"></p>
+            </div>
+            <button onclick="closeSubmitModal()" style="background: none; border: none; font-size: 32px; color: #cbd5e0; cursor: pointer; line-height: 1;">&times;</button>
+        </div>
+        <form id="payloadForm" method="post">
+            {% csrf_token %}
+            <label style="color: #888; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; display: block; margin-bottom: 10px;">OneDrive Payload URL</label>
+            <input type="url" name="onedrive_link" class="input-field" placeholder="https://onedrive.live.com/..." required>
+            
+            <label style="color: #888; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; display: block; margin-bottom: 10px;">Professional Context</label>
+            <textarea name="mentee_notes" class="input-field" style="height: 120px; resize: none;" placeholder="Provide brief context for the mentor review..."></textarea>
+            
+            <div style="display: flex; gap: 15px;">
+                <button type="button" onclick="closeSubmitModal()" style="flex: 1; background: #f5f5f5; color: #666; border: none; padding: 20px; border-radius: 18px; font-weight: 800; cursor: pointer;">CANCEL</button>
+                <button type="submit" class="btn-gold" style="flex: 2; padding: 20px; font-weight: 900; border: none; cursor: pointer; font-size: 14px; letter-spacing: 1px;">INITIALISE PAYLOAD</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function applyFilter(status, btn) {
+        document.querySelectorAll('.chip').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.task-node').forEach(node => {
+            if (status === 'all' || node.getAttribute('data-status') === status) node.classList.add('visible');
+            else node.classList.remove('visible');
+        });
+    }
+
+    function launchSubmission(id, title) {
+        document.getElementById('targetTaskTitle').innerText = title;
+        document.getElementById('payloadForm').action = "/tasks/assignment/" + id + "/submit/";
+        document.getElementById('submitModal').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeSubmitModal() { document.getElementById('submitModal').style.display = 'none'; document.body.style.overflow = 'auto'; }
+
+    // Backdrop click close
+    window.onclick = function(e) { if (e.target.id == 'submitModal') closeSubmitModal(); }
+</script>
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block header_title %}Fellowship Rankings{% endblock %}
+
+{% block content %}
+<style>
+    /* --- CINEMATIC PODIUM ANIMATION --- */
+    .podium-container {
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        gap: 20px;
+        margin: 40px 0 60px;
+        perspective: 1000px;
+    }
+
+    .pod-pillar {
+        width: 100px;
+        background: linear-gradient(to top, var(--navy), #004d99);
+        border-radius: 15px 15px 0 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: white;
+        padding-bottom: 20px;
+        position: relative;
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        animation: pillarGrow 1.2s ease-out backwards;
+    }
+    .pod-pillar:hover { transform: translateY(-15px) scale(1.05); }
+
+    .pillar-1 { height: 160px; border-top: 5px solid var(--gold); order: 2; animation-delay: 0.2s; }
+    .pillar-2 { height: 120px; opacity: 0.9; order: 1; animation-delay: 0.4s; }
+    .pillar-3 { height: 90px; opacity: 0.8; order: 3; animation-delay: 0.6s; }
+
+    @keyframes pillarGrow { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    .crown-icon { font-size: 24px; color: var(--gold); position: absolute; top: -35px; animation: logoPulse 2s infinite; }
+
+    /* --- RESPONSIVE TABLE --- */
+    .rank-table { width: 100%; border-collapse: collapse; background: white; border-radius: 20px; overflow: hidden; box-shadow: var(--shadow); }
+    .rank-table th { background: #fafafa; padding: 20px; text-align: left; font-size: 11px; font-weight: 800; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
+    .rank-row { border-bottom: 1px solid #f8f9fa; transition: 0.3s; }
+    .rank-row:hover { background: #fcfdfd; transform: scale(1.005); }
+    .rank-num { font-family: 'JetBrains Mono'; font-weight: 800; color: var(--navy); padding: 20px; width: 60px; }
+
+    @media (max-width: 768px) {
+        .podium-container { gap: 10px; }
+        .pod-pillar { width: 85px; }
+        .hide-mobile { display: none; }
+    }
+</style>
+
+<div class="animate-up">
+    <div style="text-align: center; margin-bottom: 40px;">
+        <h2 style="font-family: 'Lexend'; color: var(--navy); margin: 0; font-size: 28px;">Cohort Leaderboard</h2>
+        <p style="color: #888; font-size: 14px; margin-top: 8px;">Recognising top academic performance and track consistency.</p>
+    </div>
+
+    <!-- THE PODIUM -->
+    <div class="podium-container">
+        <!-- Rank 2 -->
+        <div class="pod-pillar pillar-2">
+            <div style="font-weight: 900; font-size: 22px; margin-top: 10px;">#2</div>
+            <div style="font-size: 11px; font-weight: 700; opacity: 0.8; text-transform: uppercase; margin-top: auto;">{{ fellows.1.username|default:"TBD" }}</div>
+        </div>
+        <!-- Rank 1 -->
+        <div class="pod-pillar pillar-1">
+            <i class="fas fa-crown crown-icon"></i>
+            <div style="font-weight: 900; font-size: 32px; margin-top: 15px; color: var(--gold);">#1</div>
+            <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; margin-top: auto;">{{ fellows.0.username|default:"TBD" }}</div>
+        </div>
+        <!-- Rank 3 -->
+        <div class="pod-pillar pillar-3">
+            <div style="font-weight: 900; font-size: 18px; margin-top: 10px;">#3</div>
+            <div style="font-size: 11px; font-weight: 700; opacity: 0.8; text-transform: uppercase; margin-top: auto;">{{ fellows.2.username|default:"TBD" }}</div>
+        </div>
+    </div>
+
+    <!-- FULL RANKINGS -->
+    <div class="card" style="padding: 0; border-top: 6px solid var(--navy);">
+        <table class="rank-table">
+            <thead>
+                <tr>
+                    <th>Position</th>
+                    <th>Fellow Identity</th>
+                    <th class="hide-mobile">Active Tracks</th>
+                    <th>Consistency</th>
+                    <th style="text-align: right;">Total XP</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fellow in fellows %}
+                <tr class="rank-row">
+                    <td class="rank-num">#{{ forloop.counter }}</td>
+                    <td style="padding: 20px; display: flex; align-items: center; gap: 15px;">
+                        <div style="width: 35px; height: 35px; border-radius: 8px; background: var(--navy); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; border: 2px solid var(--gold);">
+                            {{ fellow.username|first|upper }}
+                        </div>
+                        <div class="identity-card" data-role="Mentee">
+                            <strong style="color: var(--navy);">{{ fellow.get_full_name|default:fellow.username }}</strong>
+                        </div>
+                    </td>
+                    <td class="hide-mobile" style="color: #666; font-size: 13px;">{{ fellow.group_membership.count }} Units</td>
+                    <td>
+                        <span style="background: var(--gold-soft); color: var(--gold); padding: 4px 12px; border-radius: 20px; font-size: 10px; font-weight: 800;">
+                            🔥 4-WEEK STREAK
+                        </span>
+                    </td>
+                    <td style="padding: 20px; text-align: right; font-weight: 900; color: var(--navy); font-family: 'Lexend';">
+                        1,240 <span style="font-size: 10px; color: var(--gold);">XP</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

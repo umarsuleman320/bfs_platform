@@ -1,0 +1,275 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block header_title %}Leader Command Console{% endblock %}
+
+{% block content %}
+<style>
+    /* --- SUPREME RESPONSIVE ENGINE --- */
+    .mentor-master-layout {
+        display: grid;
+        grid-template-columns: 1.65fr 1fr;
+        gap: 30px;
+        animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Snapping for iPad (Vertical) and Tablets */
+    @media (max-width: 1150px) {
+        .mentor-master-layout { grid-template-columns: 1fr; gap: 25px; }
+        .leader-banner { flex-direction: column; text-align: center; gap: 25px; padding: 35px 25px !important; }
+        .leader-banner .btn-gold { width: 100%; max-width: 380px; justify-content: center; }
+    }
+
+    /* Mobile Phone Optimisations */
+    @media (max-width: 640px) {
+        .kpi-grid { grid-template-columns: 1fr !important; }
+        .track-item, .review-row { flex-direction: column; align-items: stretch !important; gap: 15px; padding: 20px !important; }
+        .modal-card { padding: 30px 20px !important; }
+    }
+
+    /* CINEMATIC LEADER BANNER - Deep Contrast Fix */
+    .leader-banner {
+        background: linear-gradient(135deg, #001a33 0%, #003366 100%); /* Ultra-deep navy for text clarity */
+        color: white; padding: 45px; border-radius: 28px;
+        margin-bottom: 35px; border: 3px solid var(--gold);
+        display: flex; justify-content: space-between; align-items: center;
+        box-shadow: 0 15px 35px rgba(0, 51, 102, 0.22);
+        position: relative; overflow: hidden;
+    }
+    
+    .leader-banner h1 { 
+        color: #FFFFFF !important; 
+        text-shadow: 0 2px 15px rgba(0,0,0,0.5); 
+        margin: 0; font-family: 'Lexend'; font-size: 32px; letter-spacing: -1px;
+    }
+
+    /* KPI TRIGGER CARDS */
+    .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-bottom: 35px; }
+    .kpi-trigger { text-decoration: none; display: block; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    .kpi-trigger:hover { transform: translateY(-12px); }
+    
+    .kpi-card { border-top: 6px solid var(--navy); text-align: center; height: 100%; transition: 0.3s; }
+    .kpi-card:hover { border-top-color: var(--gold); box-shadow: 0 15px 35px rgba(0,0,0,0.06); }
+    
+    .kpi-val { font-size: 38px; font-weight: 900; color: var(--navy); font-family: 'Lexend'; margin-top: 10px; }
+    .kpi-label { font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; }
+
+    /* INTERACTIVE COMPONENT ROWS */
+    .track-item, .review-row {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 24px 28px; border-radius: 20px; border: 1px solid var(--line);
+        margin-bottom: 12px; transition: 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); background: white;
+        border-left: 6px solid #d1d5db;
+    }
+    .track-item:hover, .review-row:hover { border-left-color: var(--gold); transform: translateX(12px); box-shadow: 0 10px 30px rgba(0,0,0,0.04); }
+
+    /* MODAL SYSTEM (Safe for Rotation) */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0, 26, 51, 0.88); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); display: none; align-items: center; justify-content: center; z-index: 2200; padding: 20px; }
+    .modal-card { background: white; border-radius: 32px; width: 100%; max-width: 600px; padding: 45px; box-shadow: 0 30px 80px rgba(0,0,0,0.5); animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); max-height: 90vh; overflow-y: auto; }
+    .input-field { width: 100%; padding: 16px; border: 2px solid #f2f4f7; border-radius: 16px; font-family: inherit; font-size: 15px; margin-bottom: 25px; transition: 0.3s; background: #fdfdfd; }
+    .input-field:focus { border-color: var(--gold); outline: none; background: white; box-shadow: 0 0 0 4px var(--gold-soft); }
+</style>
+
+<!-- HERO COMMAND BANNER -->
+<div class="leader-banner">
+    <div style="animation: slideInRight 0.8s ease; position: relative; z-index: 2;">
+        <span style="font-size: 11px; font-weight: 800; color: var(--gold); letter-spacing: 2px; text-transform: uppercase;">Leadership Terminal</span>
+        <h1>{{ greeting }}, {{ user.first_name|default:user.username }}!</h1>
+        <p style="color: rgba(255,255,255,0.85); font-size: 15px; margin-top: 8px; font-weight: 400; max-width: 500px;">
+            Coordinate research tracks, evaluate fellow deliverables, and monitor unit engagement metrics.
+        </p>
+    </div>
+    {% if is_leader %}
+    <button onclick="openAssignModal()" class="btn-gold" style="padding: 18px 35px; border-radius: 16px; font-weight: 800; border:none; cursor:pointer; position: relative; z-index: 2;">
+        <i class="fas fa-plus-circle"></i> INITIALISE ASSIGNMENT
+    </button>
+    {% endif %}
+    <i class="fas fa-shield-halved" style="position: absolute; right: -20px; bottom: -20px; font-size: 150px; color: rgba(255,255,255,0.03); transform: rotate(-15deg);"></i>
+</div>
+
+<!-- KPI ACTION STRIP -->
+<div class="kpi-grid">
+    <div class="card kpi-card">
+        <div class="kpi-label">Leadership Scope</div>
+        <div class="kpi-val">{{ my_groups.count }} <span style="font-size: 14px; color: #94a3b8; font-weight: 600;">Active Tracks</span></div>
+    </div>
+    
+    <a href="{% url 'tasks:review_queue' %}" class="kpi-trigger">
+        <div class="card kpi-card" style="border-top-color: var(--gold);">
+            <div class="kpi-label">Pending Reviews</div>
+            <div class="kpi-val" style="color: var(--gold);">{{ pending_reviews_count }}</div>
+            <div style="font-size: 10px; font-weight: 900; color: var(--gold); text-transform: uppercase; margin-top: 5px; letter-spacing: 1px;">Open Workspace <i class="fas fa-external-link-alt"></i></div>
+        </div>
+    </a>
+
+    <a href="{% url 'progress:at_risk_list' %}" class="kpi-trigger">
+        <div class="card kpi-card" style="border-top-color: var(--danger);">
+            <div class="kpi-label">Engagement Risk</div>
+            <div class="kpi-val" style="color: var(--danger);">{{ at_risk_count }}</div>
+            <div style="font-size: 10px; font-weight: 900; color: var(--danger); text-transform: uppercase; margin-top: 5px; letter-spacing: 1px;">Intervene Now <i class="fas fa-bolt"></i></div>
+        </div>
+    </a>
+</div>
+
+<div class="mentor-master-layout">
+    
+    <!-- LEFT: WORKFLOW & TRACKS -->
+    <div class="main-stats">
+        
+        <h3 style="color: var(--navy); font-family: 'Lexend'; margin: 0 0 25px; font-size: 20px;">
+            <i class="fas fa-clipboard-check" style="color: var(--gold);"></i> Submission Workflow
+        </h3>
+
+        <div style="margin-bottom: 45px;">
+            {% if pending_reviews_count > 0 %}
+                <div class="review-row" style="border-left-color: var(--gold); animation: slideInRight 0.5s ease;">
+                    <div style="flex:1;">
+                        <span style="font-size: 9px; font-weight: 900; background: var(--gold-soft); color: var(--gold); padding: 4px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 1px;">Action Required</span>
+                        <div style="font-weight: 800; color: var(--navy); font-size: 17px; margin-top: 10px;">Unprocessed Deliverables</div>
+                        <p style="color:#64748b; font-size: 13.5px; margin-top: 5px;">There are {{ pending_reviews_count }} fellow submissions awaiting your professional evaluation.</p>
+                    </div>
+                    <a href="{% url 'tasks:review_queue' %}" class="btn-gold" style="padding: 14px 28px; font-size: 11.5px; text-decoration: none; letter-spacing: 1px;">OPEN GRADING SUITE</a>
+                </div>
+            {% else %}
+                <div class="card" style="text-align: center; padding: 50px 20px; border: 2px dashed var(--line); background: transparent;">
+                    <i class="fas fa-check-double" style="font-size: 38px; color: #2ecc71; opacity: 0.4; margin-bottom: 15px; display: block;"></i>
+                    <p style="color: #94a3b8; font-weight: 600; font-size: 14px;">System Synchronised. Evaluation queue clear.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <h3 style="color: var(--navy); font-family: 'Lexend'; margin: 0 0 25px; font-size: 20px;">
+            <i class="fas fa-sitemap" style="color: var(--gold);"></i> My Leadership Units
+        </h3>
+        
+        <div style="display: grid; gap: 15px;">
+            {% for group in my_groups %}
+                <div class="track-item" style="border-left-color: var(--navy); animation: slideInRight 0.5s ease backwards;">
+                    <div>
+                        <div style="font-weight: 800; color: var(--navy); font-size: 18px; font-family: 'Lexend';">{{ group.name }}</div>
+                        <div style="font-size: 13px; color: #64748b; margin-top: 6px;">
+                            <i class="fas fa-users-viewfinder"></i> Unit Enrolment: <strong>{{ group.member_count }} Fellows</strong>
+                        </div>
+                    </div>
+                    <a href="{% url 'groups:group_detail' group.id %}" class="btn-gold" style="padding: 12px 25px; font-size: 11px; text-decoration: none; background: var(--navy);">MANAGE ROSTER</a>
+                </div>
+            {% empty %}
+                <div class="card" style="padding: 40px; text-align: center; color: #94a3b8; border: 2px dashed var(--line);">
+                    No tracks currently assigned to your terminal.
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- RIGHT: APPLICATIONS & DISPATCH -->
+    <div class="side-panel">
+        <div class="card inbox-card" style="animation: fadeInUp 1.2s ease;">
+            <div class="inbox-header">
+                <div>
+                    <h3 style="margin: 0; font-family: 'Lexend'; color: var(--navy); font-size: 16.5px;">Candidate Applications</h3>
+                    <small style="color:#94a3b8; font-size: 10px; font-weight: 800; text-transform: uppercase;">Admission Queue</small>
+                </div>
+                <span class="navy-badge" style="padding: 5px 12px; border-radius: 12px; font-size: 11px;">{{ my_inbox.count }} NEW</span>
+            </div>
+            
+            <div style="max-height: 480px; overflow-y: auto;">
+                {% for req in my_inbox %}
+                    <div class="inbox-row" style="animation-delay: calc({{ forloop.index }} * 0.1s);">
+                        <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
+                            <div style="width: 42px; height: 42px; border-radius: 12px; background: var(--navy); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-family: 'Lexend'; border: 2px solid var(--gold); flex-shrink: 0;">
+                                {{ req.user.username|first|upper }}
+                            </div>
+                            <div class="identity-card" data-role="{{ req.user.get_role_display }}" style="min-width: 0;">
+                                <div style="font-weight: 700; font-size: 13.5px; color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    {{ req.user.get_full_name|default:req.user.username }}
+                                </div>
+                                <div style="font-size: 11.5px; color: #64748b; margin-top: 2px;">Unit: <strong>{{ req.group.name }}</strong></div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-left: 10px;">
+                            <a href="{% url 'groups:approve_request' req.id %}" title="Approve" style="color: #2ecc71; font-size: 18px;"><i class="fas fa-check-circle"></i></a>
+                            <a href="{% url 'groups:reject_request' req.id %}" title="Decline" style="color: #e74c3c; font-size: 18px;"><i class="fas fa-times-circle"></i></a>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div style="text-align: center; padding: 40px 20px; color: #94a3b8;">
+                        <i class="fas fa-envelope-open" style="font-size: 32px; display: block; margin-bottom: 12px; opacity: 0.4;"></i>
+                        <p style="font-size: 12.5px; font-weight: 600;">Applications clear.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- QUICK BROADCAST -->
+        <div class="card" style="background: var(--navy-dark); color: white; border: none; margin-top: 25px; position: relative; overflow: hidden;">
+            <div style="position: relative; z-index: 2;">
+                <h3 style="margin: 0; font-family: 'Lexend'; font-size: 18px; color: var(--gold);">Unit Dispatch</h3>
+                <p style="font-size: 12.5px; opacity: 0.7; margin-top: 10px; line-height: 1.6;">Transmit a priority update to all fellows in your managed units.</p>
+                <textarea style="width: 100%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 15px; color: white; font-family: inherit; font-size: 13.5px; margin-top: 20px; resize: none; outline: none;" rows="3" placeholder="Compose leadership message..."></textarea>
+                <button class="btn-gold" style="width: 100%; margin-top: 15px; padding: 16px; border-radius: 12px; font-weight: 800; border:none; cursor: pointer;">INITIALISE BROADCAST</button>
+            </div>
+            <i class="fas fa-bullhorn" style="position: absolute; bottom: -15px; right: -15px; font-size: 80px; color: rgba(255,255,255,0.03); transform: rotate(-15deg);"></i>
+        </div>
+    </div>
+</div>
+
+<!-- ASSIGN TASK MODAL -->
+<div class="modal-overlay" id="assignTaskModal">
+    <div class="modal-card">
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 35px;">
+            <div>
+                <h2 style="font-family: 'Lexend'; color: var(--navy); margin: 0; font-size: 26px;">Initialise Assignment</h2>
+                <p style="color: #64748b; font-size: 14px; margin-top: 6px;">Distribute a new research task to your managed units.</p>
+            </div>
+            <button onclick="closeAssignModal()" style="background: none; border: none; font-size: 32px; color: #cbd5e0; cursor: pointer; line-height: 1;">&times;</button>
+        </div>
+        
+        <form action="{% url 'tasks:initialize_task' %}" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="target_type" value="group">
+            
+            <label class="form-label">Assignment Title</label>
+            <input type="text" name="title" class="input-field" placeholder="e.g. Unit A Manuscript: Draft 1" required>
+            
+            <label class="form-label">Select Target Track</label>
+            <select name="group_id" class="input-field" required style="cursor: pointer;">
+                {% for group in my_groups %}
+                    <option value="{{ group.id }}">{{ group.name }}</option>
+                {% empty %}
+                    <option disabled>No units available</option>
+                {% endfor %}
+            </select>
+
+            <label class="form-label">Deliverable Specification</label>
+            <textarea name="description" class="input-field" style="height: 110px; resize: none;" placeholder="Detail mission objectives and OneDrive sharing rules..." required></textarea>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <label class="form-label">Submission Deadline</label>
+                    <input type="date" name="deadline" class="input-field" required>
+                </div>
+                <div>
+                    <label class="form-label">Maximum XP</label>
+                    <input type="number" name="points_possible" class="input-field" value="20" min="1">
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 15px; margin-top: 10px;">
+                <button type="button" onclick="closeAssignModal()" style="flex: 1; background: #f1f5f9; color: #475569; border: none; padding: 18px; border-radius: 16px; font-weight: 800; cursor: pointer;">CANCEL</button>
+                <button type="submit" class="btn-gold" style="flex: 2; padding: 18px; font-weight: 900; border: none; cursor: pointer;">PUBLISH ASSIGNMENT</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openAssignModal() { 
+        document.getElementById('assignTaskModal').style.display = 'flex'; 
+        document.body.style.overflow = 'hidden'; 
+    }
+    function closeAssignModal() { 
+        document.getElementById('assignTaskModal').style.display = 'none'; 
+        document.body.style.overflow = 'auto'; 
+    }
+    window.onclick = function(e) { if (e.target.id == 'assignTaskModal') closeAssignModal(); }
+</script>
+{% endblock %}

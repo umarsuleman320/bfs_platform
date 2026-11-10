@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block header_title %}Submit Achievement for Verification{% endblock %}
+
+{% block content %}
+<style>
+    .ach-form-card {
+        max-width: 680px; margin: 0 auto; background: white;
+        padding: 40px; border-radius: 28px; border: 1px solid var(--line);
+        box-shadow: 0 15px 35px rgba(0, 51, 102, 0.05);
+    }
+    .form-label { display: block; font-size: 12px; font-weight: 800; color: var(--navy); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+    .form-input { width: 100%; padding: 13px 16px; border: 1.5px solid var(--line); border-radius: 12px; font-size: 14px; font-family: inherit; background: #fdfdfd; margin-bottom: 20px; transition: 0.3s; }
+    .form-input:focus { outline: none; border-color: var(--gold); background: white; box-shadow: 0 0 0 4px var(--gold-soft); }
+    .btn-submit-ach-form { background: var(--gold); color: white; padding: 15px; border-radius: 12px; font-size: 15px; font-weight: 700; border: none; cursor: pointer; transition: 0.3s; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn-submit-ach-form:hover { background: #e68a00; transform: translateY(-2px); }
+</style>
+
+<div class="ach-form-card">
+    <div style="text-align: center; margin-bottom: 28px;">
+        <div style="width: 55px; height: 55px; border-radius: 18px; background: var(--gold-soft); color: var(--gold); display: inline-flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 12px;">
+            <i class="fas fa-award"></i>
+        </div>
+        <h2 style="margin: 0; font-family: 'Lexend'; color: var(--navy);">Record Personal Achievement</h2>
+        <p style="margin: 6px 0 0; color: #64748b; font-size: 14px;">
+            Submit your accomplishments for review. Once verified by your mentor, it will appear on your verified profile and Wall of Fame!
+        </p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div>
+                <label class="form-label">Achievement Category</label>
+                <select name="category" class="form-input" required>
+                    <option value="employment">Employment / Job Offer</option>
+                    <option value="scholarship">Scholarship Award</option>
+                    <option value="award">Honour / Award</option>
+                    <option value="publication">Published Research Paper</option>
+                    <option value="certification">Professional Certification</option>
+                    <option value="project">Completed Practical Project</option>
+                    <option value="other">Other Milestone</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label">Organisation / Institution</label>
+                <input type="text" name="organisation" class="form-input" placeholder="e.g. NNPC, Microsoft, IEEE, University" required>
+            </div>
+        </div>
+
+        <div>
+            <label class="form-label">Achievement Title</label>
+            <input type="text" name="title" class="form-input" placeholder="e.g. Software Engineer Offer at NNPC" required>
+        </div>
+
+        <div>
+            <label class="form-label">Date of Achievement</label>
+            <input type="date" name="achievement_date" class="form-input" required>
+        </div>
+
+        <div>
+            <label class="form-label">Supporting Document / Evidence Link (OneDrive / Web)</label>
+            <input type="url" name="evidence_link" class="form-input" placeholder="https://onedrive.live.com/... (Offer letter, certificate, DOI link)">
+        </div>
+
+        <div>
+            <label class="form-label">Description / Background Details</label>
+            <textarea name="description" rows="4" class="form-input" placeholder="Explain the context, requirements met, or milestones passed..." required></textarea>
+        </div>
+
+        <button type="submit" class="btn-submit-ach-form">
+            <i class="fas fa-paper-plane"></i> Submit Milestone for Mentor Verification
+        </button>
+    </form>
+</div>
+{% endblock %}

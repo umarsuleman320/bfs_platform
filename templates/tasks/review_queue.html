@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% block header_title %}Evaluation Inbox{% endblock %}
+
+{% block content %}
+<style>
+    /* --- ANIMATION ENGINE --- */
+    .queue-wrapper {
+        animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .submission-entry {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 24px 30px;
+        background: white;
+        border-radius: 20px;
+        border: 1px solid var(--line);
+        border-left: 6px solid var(--gold);
+        margin-bottom: 15px;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        animation: slideInRight 0.5s ease backwards;
+    }
+
+    .submission-entry:hover {
+        transform: translateX(12px) scale(1.01);
+        border-left-color: var(--navy);
+        box-shadow: 0 15px 35px rgba(0, 51, 102, 0.08);
+    }
+
+    /* Responsive Snapping */
+    @media (max-width: 768px) {
+        .submission-entry {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 20px;
+            padding: 20px;
+        }
+        .submission-entry .btn-gold {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    .waiting-time {
+        font-size: 10px;
+        font-weight: 800;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        background: #f8f9fa;
+        padding: 4px 10px;
+        border-radius: 20px;
+        display: inline-block;
+        margin-bottom: 8px;
+    }
+</style>
+
+<div class="queue-wrapper">
+    <!-- HEADER -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 35px;">
+        <div>
+            <h2 style="font-family: 'Lexend'; color: var(--navy); margin: 0; font-size: 26px;">Pending Evaluations</h2>
+            <p style="color: #666; font-size: 14px; margin-top: 5px;">Reviewing submissions in chronological order (Oldest First).</p>
+        </div>
+        <div style="background: var(--navy); color: white; padding: 8px 18px; border-radius: 12px; font-weight: 800; font-size: 12px;">
+            {{ count }} ASSIGNMENTS WAITING
+        </div>
+    </div>
+
+    <!-- SUBMISSION LIST -->
+    <div id="evaluation-list">
+        {% for sub in submissions %}
+            <div class="submission-entry" style="animation-delay: calc({{ forloop.index }} * 0.1s);">
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <!-- Mentee Initials -->
+                    <div style="width: 55px; height: 55px; background: var(--navy); color: white; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; border: 2px solid var(--gold); box-shadow: 0 5px 15px rgba(0, 51, 102, 0.1);">
+                        {{ sub.assignment.mentee.username|first|upper }}
+                    </div>
+                    
+                    <div>
+                        <div class="waiting-time">
+                            <i class="far fa-clock"></i> Waiting for {{ sub.submitted_at|timesince }}
+                        </div>
+                        <h4 style="margin: 0; font-family: 'Lexend'; color: var(--navy); font-size: 18px;">
+                            {{ sub.assignment.mentee.get_full_name|default:sub.assignment.mentee.username }}
+                        </h4>
+                        <div style="font-size: 13px; color: #888; margin-top: 4px;">
+                            Track: <strong>{{ sub.assignment.task.target_group.name|default:"General" }}</strong> 
+                            <span style="margin: 0 8px; color: #ddd;">|</span>
+                            Task: <strong>{{ sub.assignment.task.title }}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div style="text-align: right; margin-right: 15px;">
+                        <div style="font-size: 10px; font-weight: 800; color: #aaa;">VERSION</div>
+                        <div style="font-weight: 800; color: var(--navy);">v{{ sub.version }}</div>
+                    </div>
+                    <a href="{% url 'tasks:review_submission' sub.id %}" class="btn-gold" style="text-decoration: none; padding: 12px 25px; font-size: 12px; letter-spacing: 0.5px;">
+                        INITIALISE REVIEW
+                    </a>
+                </div>
+            </div>
+        {% empty %}
+            <!-- EMPTY STATE -->
+            <div class="card" style="text-align: center; padding: 80px 20px; border: 2px dashed #e0e6ed; background: transparent;">
+                <div style="width: 80px; height: 80px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 32px; color: #2ecc71; box-shadow: var(--shadow);">
+                    <i class="fas fa-check-double"></i>
+                </div>
+                <h3 style="color: var(--navy); font-family: 'Lexend';">All Caught Up!</h3>
+                <p style="color: #888; max-width: 400px; margin: 10px auto;">Your evaluation queue is empty. All submitted work from your fellows has been graded.</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block header_title %}System Audit Log{% endblock %}
+
+{% block content %}
+<div class="card" style="padding: 0; overflow: hidden; border-top: 6px solid var(--navy); animation: fadeInUp 0.8s ease;">
+    <div style="padding: 25px; background: #fafafa; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin: 0; font-family: 'Lexend'; color: var(--navy); font-size: 18px;">Immutable Transaction Record</h3>
+        <span class="navy-badge" style="background: var(--navy);">SECURITY ACTIVE</span>
+    </div>
+    
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="text-align: left; font-size: 11px; color: #aaa; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #eee;">
+                    <th style="padding: 20px 25px;">Timestamp</th>
+                    <th>User Agent</th>
+                    <th>Action Executed</th>
+                    <th style="padding-right: 25px;">Operational Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr style="border-bottom: 1px solid #f9f9f9; font-size: 13px; transition: 0.3s;" onmouseover="this.style.background='#fcfdfd'">
+                    <td style="padding: 20px 25px; color: #888; font-family: 'JetBrains Mono'; white-space: nowrap;">
+                        {{ log.timestamp|date:"Y-m-d H:i" }}
+                    </td>
+                    <td>
+                        <strong style="color: var(--navy);">{{ log.user.username }}</strong>
+                        <small style="display: block; color: var(--gold); font-weight: 800; font-size: 10px;">{{ log.user.role|upper }}</small>
+                    </td>
+                    <td>
+                        <span style="background: #f0f4f8; padding: 4px 10px; border-radius: 6px; font-weight: 700; color: var(--navy); font-size: 11px;">
+                            {{ log.action }}
+                        </span>
+                    </td>
+                    <td style="padding-right: 25px; color: #666; line-height: 1.4;">
+                        {{ log.details }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

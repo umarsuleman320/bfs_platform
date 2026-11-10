@@ -1,0 +1,78 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BFS Platform — Join Fellowship</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --navy: #003366; --gold: #FF9900; }
+        
+        * { box-sizing: border-box; }
+        body, html { margin: 0; padding: 0; min-height: 100vh; font-family: 'Inter', sans-serif; }
+
+        .animated-bg {
+            width: 100%; min-height: 100vh;
+            display: flex; justify-content: center; align-items: center; padding: 20px;
+            background: linear-gradient(-45deg, #001a33, #003366, #804d00, #003366);
+            background-size: 400% 400%; animation: gradientBG 15s ease infinite;
+        }
+
+        @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        
+        .register-card {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            padding: 40px 30px; border-radius: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            width: 100%; max-width: 420px; text-align: center;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Form Styling for Django's as_p */
+        form p { text-align: left; margin-bottom: 12px; }
+        form label { display: block; font-size: 12px; font-weight: 600; color: var(--navy); margin-bottom: 4px; padding-left: 5px; }
+        input { 
+            width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 12px; 
+            font-size: 15px; transition: 0.3s; font-family: inherit;
+        }
+        input:focus { border-color: var(--navy); outline: none; background: white; }
+
+        .btn-reg {
+            background: linear-gradient(to right, var(--navy), #004d99);
+            color: white; border: none; padding: 15px; width: 100%;
+            border-radius: 12px; font-weight: 600; cursor: pointer;
+            font-family: 'Lexend'; margin-top: 10px; transition: 0.3s;
+        }
+        .btn-reg:hover { background: var(--gold); transform: translateY(-2px); }
+
+        .auth-footer { margin-top: 20px; font-size: 13px; color: #666; }
+        .auth-footer a { color: var(--navy); text-decoration: none; font-weight: 700; }
+
+        @media (max-width: 480px) { .register-card { padding: 30px 20px; } }
+    </style>
+</head>
+<body>
+    <div class="animated-bg">
+        <div class="register-card">
+            <img src="{% static 'images/logo.jpg' %}" style="width: 80px; height: 80px; border-radius: 50%; margin-bottom: 15px; border: 3px solid white; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+            <h2 style="font-family: 'Lexend'; color: #003366; margin: 0 0 5px;">Join BFS Platform</h2>
+            <p style="color: #666; font-size: 14px; margin-bottom: 25px;">Create your mentee profile</p>
+            
+            <form method="post">
+                {% csrf_token %}
+                <!-- Django's form fields -->
+                {{ form.as_p }}
+                <button type="submit" class="btn-reg">Create Account</button>
+            </form>
+            
+            <div class="auth-footer">
+                <span>Already a member? <a href="{% url 'accounts:login' %}">Login Here</a></span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

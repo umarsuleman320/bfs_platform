@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block header_title %}Open Support Ticket{% endblock %}
+
+{% block content %}
+<style>
+    .ticket-form-card {
+        max-width: 650px; margin: 0 auto; background: white;
+        padding: 40px; border-radius: 28px; border: 1px solid var(--line);
+        box-shadow: 0 15px 35px rgba(0, 51, 102, 0.05);
+    }
+    .form-label { display: block; font-size: 12px; font-weight: 800; color: var(--navy); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+    .form-input { width: 100%; padding: 13px 16px; border: 1.5px solid var(--line); border-radius: 12px; font-size: 14px; font-family: inherit; background: #fdfdfd; margin-bottom: 20px; transition: 0.3s; }
+    .form-input:focus { outline: none; border-color: var(--gold); background: white; box-shadow: 0 0 0 4px var(--gold-soft); }
+    .btn-submit-ticket { background: var(--navy); color: white; padding: 15px; border-radius: 12px; font-size: 15px; font-weight: 700; border: none; cursor: pointer; transition: 0.3s; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn-submit-ticket:hover { background: var(--gold); transform: translateY(-2px); }
+</style>
+
+<div class="ticket-form-card">
+    <div style="text-align: center; margin-bottom: 25px;">
+        <div style="width: 55px; height: 55px; border-radius: 18px; background: var(--navy); color: var(--gold); display: inline-flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 12px;">
+            <i class="fas fa-question-circle"></i>
+        </div>
+        <h2 style="margin: 0; font-family: 'Lexend'; color: var(--navy);">New Support Ticket</h2>
+        <p style="margin: 6px 0 0; color: #64748b; font-size: 14px;">
+            Your ticket will be routed to your mentor: <strong>{{ assigned_mentor.get_full_name|default:assigned_mentor.username|default:"Programme Leadership" }}</strong>
+        </p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div>
+            <label class="form-label">Subject / Topic</label>
+            <input type="text" name="subject" class="form-input" placeholder="e.g. Guidance needed on Deliverable 3 submission requirements" required>
+        </div>
+
+        <div>
+            <label class="form-label">Priority Level</label>
+            <select name="priority" class="form-input">
+                <option value="low">Low Priority (General Question)</option>
+                <option value="normal" selected>Normal Priority (Routine Inquiry)</option>
+                <option value="high">High Priority (Time-Sensitive)</option>
+                <option value="urgent">Urgent Priority (Critical Blockage)</option>
+            </select>
+        </div>
+
+        <div>
+            <label class="form-label">Detailed Description of Question / Issue</label>
+            <textarea name="message" rows="5" class="form-input" placeholder="Explain the context, what you have tried, and how your mentor can assist..." required></textarea>
+        </div>
+
+        <button type="submit" class="btn-submit-ticket">
+            <i class="fas fa-paper-plane"></i> Submit Support Inquiry
+        </button>
+    </form>
+</div>
+{% endblock %}

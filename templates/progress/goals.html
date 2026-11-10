@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block header_title %}Goal Strategy{% endblock %}
+
+{% block content %}
+<style>
+    .goal-master-layout { max-width: 800px; margin: 0 auto; animation: fadeInUp 0.8s ease; }
+    
+    .goal-card {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 20px 25px; background: white; border-radius: 20px;
+        border: 1px solid var(--line); margin-bottom: 12px;
+        transition: 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+    }
+    .goal-card:hover { transform: translateX(10px); border-color: var(--gold); }
+
+    .check-box {
+        width: 24px; height: 24px; border-radius: 8px; border: 2px solid var(--gold);
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; transition: 0.3s;
+    }
+    .check-box.completed { background: var(--gold); box-shadow: 0 0 15px rgba(255, 153, 0, 0.4); }
+    .check-box.completed::after { content: "✓"; color: white; font-weight: 900; font-size: 14px; }
+
+    .goal-text.completed { text-decoration: line-through; color: #aaa; }
+
+    .add-goal-box {
+        background: var(--navy); padding: 30px; border-radius: 24px;
+        margin-bottom: 40px; display: flex; gap: 15px;
+        box-shadow: 0 15px 35px rgba(0, 51, 102, 0.2);
+    }
+    @media (max-width: 600px) { .add-goal-box { flex-direction: column; } }
+</style>
+
+<div class="goal-master-layout">
+    <!-- GOAL CREATION TERMINAL -->
+    <div class="add-goal-box">
+        <form action="{% url 'progress:add_goal' %}" method="post" style="display: flex; width: 100%; gap: 15px;">
+            {% csrf_token %}
+            <input type="text" name="title" required placeholder="Initialise a new personal milestone..." 
+                   style="flex: 1; padding: 15px; border-radius: 14px; border: none; font-family: inherit; font-size: 14px; outline: none;">
+            <button type="submit" class="btn-gold" style="padding: 15px 30px; border-radius: 14px; font-weight: 800;">
+                <i class="fas fa-plus"></i> ADD GOAL
+            </button>
+        </form>
+    </div>
+
+    <!-- LIST HEADER -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 0 10px;">
+        <h3 style="font-family: 'Lexend'; color: var(--navy); margin: 0;">Strategy Checklist</h3>
+        <span class="navy-badge">{{ goals.count }} PRIVATE OBJECTIVES</span>
+    </div>
+
+    <!-- DYNAMIC GOAL LIST -->
+    {% for goal in goals %}
+        <div class="goal-card" style="animation: slideInRight 0.5s ease backwards calc({{ forloop.index }} * 0.1s);">
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <a href="{% url 'progress:toggle_goal' goal.id %}" style="text-decoration: none;">
+                    <div class="check-box {% if goal.status == 'completed' %}completed{% endif %}"></div>
+                </a>
+                <span class="goal-text {% if goal.status == 'completed' %}completed{% endif %}" 
+                      style="font-weight: 600; color: var(--navy); font-size: 15px;">
+                    {{ goal.title }}
+                </span>
+            </div>
+            
+            <span style="font-size: 11px; color: #bbb; font-weight: 700;">
+                {{ goal.created_at|date:"M d" }}
+            </span>
+        </div>
+    {% empty %}
+        <div class="card" style="text-align: center; padding: 60px 20px; border: 2px dashed #ddd; background: transparent;">
+            <i class="fas fa-flag-checkered" style="font-size: 40px; color: #ddd; margin-bottom: 20px; display: block;"></i>
+            <p style="color: #999; font-weight: 600;">Your growth strategy is empty. Define your first goal above.</p>
+        </div>
+    {% endfor %}
+
+    <div style="margin-top: 30px; background: #fff9f0; padding: 20px; border-radius: 18px; border-left: 5px solid var(--gold);">
+        <p style="font-size: 12px; color: #8a7c63; margin: 0; line-height: 1.6;">
+            <i class="fas fa-lock"></i> <strong>Privacy Protocol:</strong> These goals are strictly personal and are not visible to your mentor or coordinator unless shared manually.
+        </p>
+    </div>
+</div>
+{% endblock %}

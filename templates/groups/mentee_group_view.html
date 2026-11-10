@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block header_title %}Research Track Directory{% endblock %}
+{% block content %}
+<div style="margin-bottom: 25px;">
+    <a href="{% url 'dashboard:home' %}" style="text-decoration: none; color: var(--navy); font-weight: 700; font-size: 14px; display: inline-flex; align-items: center; gap: 8px;">
+        <i class="fas fa-arrow-left"></i> Back to Workspace
+    </a>
+</div>
+
+<div class="dashboard-grid" style="display: grid; grid-template-columns: 320px 1fr; gap: 25px;">
+    
+    <!-- TRACK CARD -->
+    <div class="card" style="border-top: 6px solid var(--gold); height: fit-content; animation: fadeInUp 0.6s ease;">
+        <h2 style="font-family: 'Lexend'; color: var(--navy); margin: 0;">{{ group.name }}</h2>
+        <p style="color: #666; font-size: 14px; line-height: 1.6; margin: 20px 0;">{{ group.description|default:"A dedicated research track within the fellowship." }}</p>
+        
+        <div style="border-top: 1px solid #eee; padding-top: 20px;">
+            <div style="font-size: 11px; font-weight: 800; color: #aaa; text-transform: uppercase; letter-spacing: 1px;">Lead Mentor</div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+                <div style="width: 35px; height: 35px; border-radius: 50%; background: var(--navy); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800;">
+                    {{ group.mentor.username|first|upper|default:"?" }}
+                </div>
+                <div style="font-weight: 700; color: var(--navy);">{{ group.mentor.get_full_name|default:"To Be Assigned" }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PEERS LIST -->
+    <div class="card" style="animation: fadeInUp 0.8s ease;">
+        <h3 style="color: var(--navy); margin-top: 0;"><i class="fas fa-users" style="color: var(--gold);"></i> My Research Peers</h3>
+        <p style="color: #888; font-size: 13px;">You are collaborating with {{ peers.count }} other fellows in this track.</p>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; margin-top: 25px;">
+            {% for p in peers %}
+                <div style="display: flex; align-items: center; gap: 15px; padding: 15px; border: 1px solid #f0f0f0; border-radius: 18px; background: #fafafa; transition: 0.3s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='#f0f0f0'">
+                    <div style="width: 45px; height: 45px; border-radius: 12px; background: white; border: 2px solid var(--navy); color: var(--navy); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px;">
+                        {{ p.user.username|first|upper }}
+                    </div>
+                    <div>
+                        <div style="font-size: 14px; font-weight: 700; color: var(--navy);">{{ p.user.get_full_name|default:p.user.username }}</div>
+                        <div style="font-size: 10px; color: var(--gold); font-weight: 800; text-transform: uppercase;">Fellow</div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

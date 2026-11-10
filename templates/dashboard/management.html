@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block header_title %}Program Insights{% endblock %}
+
+{% block content %}
+<style>
+    /* --- SUPREME ANALYTICS ENGINE --- */
+    .mgmt-master-layout {
+        display: grid;
+        grid-template-columns: 1.8fr 1fr; /* Analytics Ratio */
+        gap: 30px;
+        align-items: start;
+        animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Snapping for iPad Vertical and Tablets */
+    @media (max-width: 1150px) {
+        .mgmt-master-layout { grid-template-columns: 1fr; }
+        .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    }
+
+    /* Mobile Phone Adjustments */
+    @media (max-width: 600px) {
+        .mgmt-master-layout { gap: 20px; }
+        .kpi-grid { grid-template-columns: 1fr !important; }
+        .chart-container { height: 180px !important; gap: 8px !important; }
+        .broadcast-footer { flex-direction: column; align-items: stretch !important; }
+        .kpi-val { font-size: 28px !important; }
+    }
+
+    /* KPI CARDS STYLING */
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 35px;
+    }
+    .kpi-card {
+        border-top: 5px solid var(--navy);
+        transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    .kpi-card:hover { transform: translateY(-8px); border-top-color: var(--gold); box-shadow: 0 15px 35px rgba(0, 51, 102, 0.05); }
+    .kpi-val { font-size: 34px; font-weight: 900; color: var(--navy); margin-top: 10px; font-family: 'Lexend'; }
+    .kpi-label { font-size: 11px; font-weight: 800; color: #aaa; text-transform: uppercase; letter-spacing: 1.5px; }
+
+    /* CINEMATIC TREND CHART */
+    .chart-container { 
+        display: flex; align-items: flex-end; height: 220px; gap: 12px; 
+        padding-top: 35px; border-bottom: 2px solid #f8fafd; position: relative;
+    }
+    .chart-bar { 
+        flex: 1; background: var(--navy); border-radius: 8px 8px 0 0; 
+        transition: 0.6s cubic-bezier(0.4, 0, 0.2, 1); position: relative; cursor: pointer;
+    }
+    .chart-bar:hover { background: var(--gold); }
+    .chart-bar::after {
+        content: attr(data-value); position: absolute; top: -30px; left: 50%;
+        transform: translateX(-50%); font-size: 10px; font-weight: 800; color: white; 
+        opacity: 0; transition: 0.3s; background: var(--navy); padding: 4px 8px; border-radius: 6px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .chart-bar:hover::after { opacity: 1; top: -40px; }
+
+    /* LIVE ACTIVITY PULSE RAIL */
+    .pulse-card { border-top: 6px solid var(--gold) !important; padding: 0 !important; overflow: hidden; }
+    .pulse-item { 
+        display: flex; align-items: center; gap: 15px; padding: 20px 25px; 
+        border-bottom: 1px solid #f8fafd; transition: 0.3s;
+        animation: slideInRight 0.6s ease backwards; 
+    }
+    .pulse-item:hover { background: #fcfdfd; transform: translateX(10px); border-left: 4px solid var(--gold); }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); animation: logoPulse 2s infinite; }
+</style>
+
+<!-- TOP KPI SECTION (Dynamic Phase 4 Metrics) -->
+<div class="kpi-grid">
+    <div class="card kpi-card" style="animation: fadeInUp 0.4s ease;">
+        <div class="kpi-label">Fellowship Size</div>
+        <div class="kpi-val">{{ total_mentees }}</div>
+    </div>
+    <div class="card kpi-card" style="border-top-color: var(--success); animation: fadeInUp 0.6s ease;">
+        <div class="kpi-label">Completion Velocity</div>
+        <div class="kpi-val">{{ completion_rate }}%</div>
+    </div>
+    <div class="card kpi-card" style="border-top-color: var(--gold); animation: fadeInUp 0.8s ease;">
+        <div class="kpi-label">System Tracks</div>
+        <div class="kpi-val">{{ total_groups }}</div>
+    </div>
+    <div class="card kpi-card" style="border-top-color: var(--danger); animation: fadeInUp 1s ease;">
+        <div class="kpi-label">Program Risk</div>
+        <div class="kpi-val" style="color: var(--danger);">{{ at_risk_count }}</div>
+    </div>
+</div>
+
+<div class="mgmt-master-layout">
+    
+    <!-- LEFT: PERFORMANCE ANALYTICS -->
+    <div class="main-stats">
+        <div class="card" style="animation: fadeInUp 1.1s ease;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                <div>
+                    <h3 style="font-family: 'Lexend'; color: var(--navy); margin: 0;"><i class="fas fa-chart-line" style="color: var(--gold); margin-right: 10px;"></i> Submission Velocity</h3>
+                    <p style="margin: 5px 0 0; font-size: 12px; color: #888;">Real-time engagement tracking across all fellowship tracks.</p>
+                </div>
+                <span style="font-size: 10px; font-weight: 800; color: #888; text-transform: uppercase; background: #fafafa; padding: 4px 10px; border-radius: 20px;">Last 14 Reporting Days</span>
+            </div>
+            
+            <div class="chart-container">
+                <!-- Staggered Height Tooltips (Interactive) -->
+                <div class="chart-bar" data-value="45%" style="height: 45%;"></div>
+                <div class="chart-bar" data-value="62%" style="height: 62%;"></div>
+                <div class="chart-bar" data-value="88%" style="height: 88%;"></div>
+                <div class="chart-bar" data-value="51%" style="height: 51%;"></div>
+                <div class="chart-bar" data-value="95%" style="height: 95%; background: var(--gold);"></div>
+                <div class="chart-bar" data-value="74%" style="height: 74%;"></div>
+                <div class="chart-bar" data-value="82%" style="height: 82%;"></div>
+                <div class="chart-bar" data-value="60%" style="height: 60%;"></div>
+                <div class="chart-bar" data-value="40%" style="height: 40%;"></div>
+                <div class="chart-bar" data-value="77%" style="height: 77%;"></div>
+                <div class="chart-bar" data-value="85%" style="height: 85%;"></div>
+                <div class="chart-bar" data-value="68%" style="height: 68%;"></div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; margin-top: 20px; color: #aaa; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px;">
+                <span>Cycle Initialization</span>
+                <span>Peak Performance</span>
+                <span>Live Metrics</span>
+            </div>
+        </div>
+
+        <!-- BROADCAST TERMINAL -->
+        <div class="card" style="border-left: 6px solid var(--navy); animation: fadeInUp 1.3s ease;">
+            <div style="margin-bottom: 20px;">
+                <h3 style="color: var(--navy); margin: 0; font-family: 'Lexend';"><i class="fas fa-bullhorn"></i> Global Fellowship Broadcast</h3>
+                <p style="font-size: 13px; color: #666; margin-top: 5px;">Dispatch an official communiqué to all mentors and fellows within the system.</p>
+            </div>
+            <div class="broadcast-footer" style="display: flex; gap: 20px; align-items: flex-end;">
+                <textarea style="flex: 1; border: 2px solid #f0f0f0; border-radius: 18px; padding: 20px; font-family: inherit; font-size: 14px; outline: none; transition: 0.3s; min-height: 120px; resize: none; background: #fafafa;" placeholder="Compose global announcement..."></textarea>
+                <button class="btn-gold" style="padding: 18px 40px; border-radius: 16px; font-weight: 800; letter-spacing: 1px;">
+                    BROADCAST NOW <i class="fas fa-paper-plane" style="margin-left: 10px; font-size: 12px;"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT: LIVE ACTIVITY PULSE -->
+    <div class="side-panel">
+        <div class="card pulse-card" style="animation: fadeInUp 1.2s ease;">
+            <div style="padding: 25px; background: #fafafa; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h3 style="margin: 0; font-family: 'Lexend'; color: var(--navy); font-size: 17px;">Activity Pulse</h3>
+                    <small style="color: #aaa; font-weight: 700;">LIVE FEED</small>
+                </div>
+                <div style="width: 40px; height: 40px; border-radius: 12px; background: var(--gold-soft); color: var(--gold); display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-bolt"></i>
+                </div>
+            </div>
+            
+            <div style="max-height: 550px; overflow-y: auto; scrollbar-width: thin;">
+                {% for req in global_inbox %}
+                <div class="pulse-item" style="animation-delay: calc({{ forloop.index }} * 0.15s);">
+                    <div class="status-dot"></div>
+                    <div>
+                        <div class="identity-card" data-role="{{ req.user.get_role_display }}" style="font-size: 14px; color: var(--navy); font-weight: 700;">
+                            {{ req.user.get_full_name|default:req.user.username }}
+                        </div>
+                        <div style="font-size: 12px; color: #888; margin-top: 2px;">Application for <strong>{{ req.group.name }}</strong></div>
+                        <div style="font-size: 10px; color: #bbb; margin-top: 6px; font-weight: 800; text-transform: uppercase;">
+                            <i class="far fa-clock"></i> {{ req.created_at|timesince }} ago
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div style="text-align: center; padding: 60px 20px; color: #ccc;">
+                    <i class="fas fa-satellite-dish" style="font-size: 32px; margin-bottom: 15px; display: block; opacity: 0.3;"></i>
+                    <p style="font-size: 13px; font-weight: 600;">Awaiting program activity...</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- MANAGEMENT AUDIT SHORTCUT -->
+        <div class="card" style="margin-top: 25px; text-align: center; background: #fdfdfd; border-top: 5px solid var(--navy);">
+            <h4 style="margin:0; font-family: 'Lexend'; color: var(--navy); font-size: 16px;">Administrative Logs</h4>
+            <p style="font-size: 12.5px; color: #888; margin: 10px 0 20px; line-height: 1.5;">Review system-wide audit logs and fellowship security metrics.</p>
+            <a href="{% url 'progress:audit_log' %}" style="border: 2px solid var(--navy); color: var(--navy); width: 100%; padding: 12px; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.3s; text-decoration: none; display: inline-block;">
+                OPEN OVERSIGHT TERMINAL
+            </a>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block header_title %}Broadcast New Announcement{% endblock %}
+
+{% block content %}
+<style>
+    .ann-form-card {
+        max-width: 680px; margin: 0 auto; background: white;
+        padding: 40px; border-radius: 28px; border: 1px solid var(--line);
+        box-shadow: 0 15px 35px rgba(0, 51, 102, 0.05);
+    }
+    .form-label { display: block; font-size: 12px; font-weight: 800; color: var(--navy); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+    .form-input { width: 100%; padding: 13px 16px; border: 1.5px solid var(--line); border-radius: 12px; font-size: 14px; font-family: inherit; background: #fdfdfd; margin-bottom: 20px; transition: 0.3s; }
+    .form-input:focus { outline: none; border-color: var(--gold); background: white; box-shadow: 0 0 0 4px var(--gold-soft); }
+    .btn-submit-ann-form { background: var(--navy); color: white; padding: 15px; border-radius: 12px; font-size: 15px; font-weight: 700; border: none; cursor: pointer; transition: 0.3s; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn-submit-ann-form:hover { background: var(--gold); transform: translateY(-2px); }
+</style>
+
+<div class="ann-form-card">
+    <div style="text-align: center; margin-bottom: 28px;">
+        <div style="width: 55px; height: 55px; border-radius: 18px; background: var(--navy); color: var(--gold); display: inline-flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 12px;">
+            <i class="fas fa-bullhorn"></i>
+        </div>
+        <h2 style="margin: 0; font-family: 'Lexend'; color: var(--navy);">Broadcast Announcement</h2>
+        <p style="margin: 6px 0 0; color: #64748b; font-size: 14px;">
+            Publish messages to fellows and faculty. Priority announcements will be pinned to all dashboard terminals.
+        </p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div>
+            <label class="form-label">Announcement Title</label>
+            <input type="text" name="title" class="form-input" placeholder="e.g. Schedule Update: Midterm Review & Masterclass" required>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div>
+                <label class="form-label">Target Audience</label>
+                <select name="audience" class="form-input" id="audienceSelect" onchange="toggleGroupSelect()">
+                    <option value="all">All Fellows & Mentors</option>
+                    <option value="mentees">Mentees Only</option>
+                    <option value="mentors">Mentors Only</option>
+                    <option value="group">Specific Research Track</option>
+                </select>
+            </div>
+            <div id="groupSelectBox" style="display: none;">
+                <label class="form-label">Select Track</label>
+                <select name="group_id" class="form-input">
+                    {% for g in groups %}
+                    <option value="{{ g.id }}">{{ g.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; font-weight: 700; color: var(--navy);">
+                <input type="checkbox" name="is_priority" style="width: 18px; height: 18px; accent-color: var(--gold);">
+                <span style="color: var(--gold);"><i class="fas fa-star"></i> Mark as High-Priority Notice</span>
+            </label>
+        </div>
+
+        <div>
+            <label class="form-label">Message Content</label>
+            <textarea name="message" rows="6" class="form-input" placeholder="Full announcement text, links, and guidance..." required></textarea>
+        </div>
+
+        <button type="submit" class="btn-submit-ann-form">
+            <i class="fas fa-paper-plane"></i> Publish & Broadcast
+        </button>
+    </form>
+</div>
+
+<script>
+    function toggleGroupSelect() {
+        const aud = document.getElementById('audienceSelect').value;
+        const box = document.getElementById('groupSelectBox');
+        box.style.display = (aud === 'group') ? 'block' : 'none';
+    }
+</script>
+{% endblock %}

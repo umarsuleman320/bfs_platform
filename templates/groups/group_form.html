@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block header_title %}Create Research Track{% endblock %}
+
+{% block content %}
+<div style="max-width: 650px; margin: 0 auto; background: white; border-radius: 20px; padding: 35px; border: 1px solid var(--line); box-shadow: 0 10px 30px rgba(0,0,0,0.04);">
+    <div style="margin-bottom: 25px;">
+        <h2 style="font-family: 'Lexend'; color: var(--navy); margin-bottom: 6px;">New Research Track</h2>
+        <p style="color: #64748b; font-size: 14px;">Define a cohort track with capacity limits and membership policies.</p>
+    </div>
+
+    <form method="post" action="{% url 'groups:create_group' %}">
+        {% csrf_token %}
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; font-size: 12px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 8px;">Track Name</label>
+            <input type="text" name="name" required placeholder="e.g. Research Group F - Quantum Computing" 
+                style="width: 100%; padding: 12px 16px; border: 1.5px solid var(--line); border-radius: 12px; font-family: inherit; font-size: 14px;">
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; font-size: 12px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 8px;">Description & Scope</label>
+            <textarea name="description" rows="4" placeholder="Detail the technical domain, target skills, and project milestones..."
+                style="width: 100%; padding: 12px 16px; border: 1.5px solid var(--line); border-radius: 12px; font-family: inherit; font-size: 14px;"></textarea>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
+            <div>
+                <label style="display: block; font-size: 12px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 8px;">Cohort Capacity</label>
+                <input type="number" name="capacity" value="15" min="1" max="100"
+                    style="width: 100%; padding: 12px 16px; border: 1.5px solid var(--line); border-radius: 12px; font-family: inherit; font-size: 14px;">
+            </div>
+            <div>
+                <label style="display: block; font-size: 12px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 8px;">Join Policy</label>
+                <select name="join_status" style="width: 100%; padding: 12px 16px; border: 1.5px solid var(--line); border-radius: 12px; font-family: inherit; font-size: 14px; background: white;">
+                    <option value="approval">Approval Required</option>
+                    <option value="open">Open (Instant Join)</option>
+                    <option value="closed">Closed (Invitation Only)</option>
+                </select>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 15px; justify-content: flex-end;">
+            <a href="{% url 'groups:group_list' %}" class="btn-action" style="background: #f1f5f9; color: #475569; text-decoration: none; padding: 12px 24px; border-radius: 12px; font-weight: 600;">Cancel</a>
+            <button type="submit" class="btn-action" style="background: var(--navy); color: white; border: none; padding: 12px 28px; border-radius: 12px; font-weight: 700; cursor: pointer;">
+                <i class="fas fa-plus-circle" style="margin-right: 6px;"></i> Initialize Track
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

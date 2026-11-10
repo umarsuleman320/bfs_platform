@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block header_title %}Escalation Control{% endblock %}
+
+{% block content %}
+<style>
+    /* --- EMERGENCY UI TOKENS --- */
+    .risk-banner {
+        background: linear-gradient(135deg, #c4453a 0%, #801d16 100%);
+        color: white; padding: 35px; border-radius: 25px;
+        margin-bottom: 35px; border: 3px solid #ff7675;
+        animation: fadeInUp 0.8s ease;
+    }
+
+    .flag-card {
+        background: white; border-radius: 20px; padding: 25px;
+        border: 1px solid var(--line); border-left: 6px solid #e74c3c;
+        margin-bottom: 15px; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        display: flex; justify-content: space-between; align-items: center;
+        animation: slideInRight 0.5s ease backwards;
+    }
+    .flag-card:hover { transform: translateX(10px); border-left-color: var(--navy); }
+    .flag-card.status-resolved { border-left-color: #2ecc71; opacity: 0.8; }
+
+    .status-badge { font-size: 9px; font-weight: 900; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 1px; }
+    .badge-open { background: #ffebee; color: #c62828; }
+    .badge-resolved { background: #e8f5e9; color: #2e7d32; }
+
+    .reason-box { background: #fdfdfd; padding: 15px; border-radius: 12px; margin-top: 10px; font-size: 13px; color: #555; line-height: 1.6; border: 1px solid #f1f1f1; }
+
+    @media (max-width: 768px) {
+        .flag-card { flex-direction: column; align-items: flex-start; gap: 20px; }
+        .btn-resolve { width: 100%; text-align: center; }
+    }
+</style>
+
+<!-- HEADER BANNER -->
+<div class="risk-banner">
+    <h1 style="margin:0; font-family: 'Lexend'; font-size: 28px;"><i class="fas fa-exclamation-triangle"></i> Escalation Terminal</h1>
+    <p style="opacity: 0.9; font-size: 14px; margin-top: 8px;">Monitoring disengaged fellows and coordinating management intervention.</p>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr; gap: 30px;">
+    
+    <!-- MAIN CASE LIST -->
+    <div class="card" style="padding: 35px; border-top: 6px solid var(--navy);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <h3 style="font-family: 'Lexend'; color: var(--navy); margin: 0;">Active Escalation Records</h3>
+            <span class="navy-badge">{{ escalations.count }} TOTAL FLAGS</span>
+        </div>
+
+        {% for flag in escalations %}
+            <div class="flag-card status-{{ flag.status }}" style="animation-delay: calc({{ forloop.index }} * 0.1s);">
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+                        <span class="status-badge badge-{{ flag.status }}">{{ flag.get_status_display }}</span>
+                        <span style="font-size: 11px; color: #aaa; font-weight: 700;">RAISED {{ flag.created_at|date:"M d, P" }}</span>
+                    </div>
+                    
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div style="width: 45px; height: 45px; border-radius: 12px; background: var(--navy); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800;">
+                            {{ flag.mentee.username|first|upper }}
+                        </div>
+                        <div>
+                            <h4 style="margin:0; color: var(--navy); font-family: 'Lexend';">{{ flag.mentee.get_full_name|default:flag.mentee.username }}</h4>
+                            <div style="font-size: 12px; color: var(--gold); font-weight: 700;">By Mentor: {{ flag.raised_by.get_full_name|default:flag.raised_by.username }}</div>
+                        </div>
+                    </div>
+
+                    <div class="reason-box">
+                        <strong>Reason for Flag:</strong><br>
+                        {{ flag.reason }}
+                    </div>
+                </div>
+
+                <div style="margin-left: 30px; text-align: right;">
+                    {% if flag.status == 'open' and user.role in 'management,coordinator' %}
+                        <a href="{% url 'progress:resolve_escalation' flag.id %}" class="btn-gold" style="background: #2ecc71; text-decoration: none; padding: 12px 25px;">MARK RESOLVED</a>
+                    {% elif flag.status == 'resolved' %}
+                        <div style="color: #2ecc71; font-weight: 800; font-size: 12px;"><i class="fas fa-check-double"></i> ISSUE RESOLVED</div>
+                    {% else %}
+                        <div style="color: #aaa; font-weight: 700; font-size: 11px;">AWAITING MANAGEMENT</div>
+                    {% endif %}
+                </div>
+            </div>
+        {% empty %}
+            <div style="text-align: center; padding: 60px 20px; color: #ddd;">
+                <i class="fas fa-shield-heart" style="font-size: 40px; margin-bottom: 20px; opacity: 0.3;"></i>
+                <p style="font-weight: 600; color: #bbb;">System Safe: No active escalations found.</p>
+            </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block header_title %}Help Desk Support Terminal{% endblock %}
+
+{% block content %}
+<style>
+    .hd-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; margin-bottom: 30px; }
+    .ticket-table { width: 100%; border-collapse: collapse; text-align: left; }
+    .ticket-table th { background: #f8fafc; padding: 18px 24px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #64748b; font-weight: 800; border-bottom: 1px solid var(--line); }
+    .ticket-table td { padding: 18px 24px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+    .ticket-table tr:hover { background: #fdfdfd; }
+    
+    .status-badge { font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.8px; }
+    .status-open { background: #e0f2fe; color: #0284c7; }
+    .status-in_progress { background: #fef3c7; color: #d97706; }
+    .status-awaiting_mentee { background: #f3e8ff; color: #9333ea; }
+    .status-resolved { background: #dcfce7; color: #16a34a; }
+    .status-escalated { background: #fee2e2; color: #dc2626; }
+
+    .btn-create-ticket {
+        padding: 10px 20px; border-radius: 12px; background: var(--gold); color: white;
+        text-decoration: none; font-size: 13px; font-weight: 700; display: inline-flex;
+        align-items: center; gap: 8px; transition: 0.3s;
+    }
+    .btn-create-ticket:hover { background: #e68a00; transform: translateY(-2px); }
+</style>
+
+<div class="hd-header">
+    <div>
+        <h2 style="margin: 0; font-family: 'Lexend'; color: var(--navy);">Help Desk Support Terminal</h2>
+        <p style="margin: 5px 0 0; color: #64748b; font-size: 14px;">Submit questions, receive responses from mentors, and escalate complex issues.</p>
+    </div>
+    {% if user.role == 'mentee' %}
+    <div>
+        <a href="{% url 'helpdesk:ticket_create' %}" class="btn-create-ticket">
+            <i class="fas fa-plus-circle"></i> Open Support Ticket
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- FILTER TABS -->
+<div style="display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap;">
+    <a href="?status=all" style="padding: 8px 18px; border-radius: 20px; text-decoration: none; font-size: 12px; font-weight: 700; background: {% if current_status == 'all' or not current_status %}var(--navy){% else %}#f1f5f9{% endif %}; color: {% if current_status == 'all' or not current_status %}white{% else %}#64748b{% endif %};">All Tickets</a>
+    <a href="?status=open" style="padding: 8px 18px; border-radius: 20px; text-decoration: none; font-size: 12px; font-weight: 700; background: {% if current_status == 'open' %}var(--navy){% else %}#f1f5f9{% endif %}; color: {% if current_status == 'open' %}white{% else %}#64748b{% endif %};">Open ({{ open_count }})</a>
+    <a href="?status=in_progress" style="padding: 8px 18px; border-radius: 20px; text-decoration: none; font-size: 12px; font-weight: 700; background: {% if current_status == 'in_progress' %}var(--navy){% else %}#f1f5f9{% endif %}; color: {% if current_status == 'in_progress' %}white{% else %}#64748b{% endif %};">In Progress ({{ in_progress_count }})</a>
+    <a href="?status=escalated" style="padding: 8px 18px; border-radius: 20px; text-decoration: none; font-size: 12px; font-weight: 700; background: {% if current_status == 'escalated' %}#dc2626{% else %}#f1f5f9{% endif %}; color: {% if current_status == 'escalated' %}white{% else %}#dc2626{% endif %};">Escalated ({{ escalated_count }})</a>
+    <a href="?status=resolved" style="padding: 8px 18px; border-radius: 20px; text-decoration: none; font-size: 12px; font-weight: 700; background: {% if current_status == 'resolved' %}var(--navy){% else %}#f1f5f9{% endif %}; color: {% if current_status == 'resolved' %}white{% else %}#64748b{% endif %};">Resolved</a>
+</div>
+
+<!-- TICKETS TABLE -->
+<div style="background: white; border-radius: 24px; border: 1px solid var(--line); overflow-x: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.02);">
+    <table class="ticket-table">
+        <thead>
+            <tr>
+                <th>Ticket ID & Subject</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Submitter</th>
+                <th>Assigned To</th>
+                <th>Last Activity</th>
+                <th style="text-align: right;">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in tickets %}
+            <tr>
+                <td>
+                    <div style="font-weight: 800; font-size: 15px; color: var(--navy);">
+                        <a href="{% url 'helpdesk:ticket_detail' t.id %}" style="color: inherit; text-decoration: none;">
+                            #{{ t.id }}: {{ t.subject }}
+                        </a>
+                    </div>
+                    <div style="font-size: 12px; color: #64748b;">{{ t.message|truncatechars:65 }}</div>
+                </td>
+                <td>
+                    <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: {% if t.priority == 'urgent' %}#dc2626{% elif t.priority == 'high' %}#d97706{% else %}#64748b{% endif %};">
+                        {{ t.priority }}
+                    </span>
+                </td>
+                <td>
+                    <span class="status-badge status-{{ t.status }}">{{ t.get_status_display }}</span>
+                </td>
+                <td style="font-size: 13px; font-weight: 600;">{{ t.mentee.get_full_name|default:t.mentee.username }}</td>
+                <td style="font-size: 13px; color: #64748b;">{{ t.assigned_to.get_full_name|default:t.assigned_to.username|default:"Unassigned" }}</td>
+                <td style="font-size: 12px; color: #94a3b8;">{{ t.updated_at|timesince }} ago</td>
+                <td style="text-align: right;">
+                    <a href="{% url 'helpdesk:ticket_detail' t.id %}" style="padding: 7px 14px; border-radius: 10px; background: #f1f5f9; color: var(--navy); text-decoration: none; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+                        Open <i class="fas fa-chevron-right"></i>
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" style="text-align: center; padding: 45px; color: #64748b;">
+                    <i class="far fa-question-circle" style="font-size: 38px; color: #cbd5e1; margin-bottom: 12px; display: block;"></i>
+                    No support tickets found in this category.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

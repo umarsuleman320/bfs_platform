@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% block header_title %}Mentor–Mentee Pairings{% endblock %}
+
+{% block content %}
+<style>
+    .pairing-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; margin-bottom: 30px; }
+    .table-container { background: white; border-radius: 24px; border: 1px solid var(--line); overflow-x: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.03); margin-bottom: 35px; }
+    .custom-table { width: 100%; border-collapse: collapse; text-align: left; min-width: 650px; }
+    .custom-table th { background: #f8fafc; padding: 18px 24px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #64748b; font-weight: 800; border-bottom: 1px solid var(--line); }
+    .custom-table td { padding: 18px 24px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+    .custom-table tr:hover { background: #fdfdfd; }
+    
+    .btn-action { padding: 8px 16px; border-radius: 12px; font-size: 12px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; border: none; cursor: pointer; transition: 0.2s; }
+    .btn-gold { background: var(--gold); color: white; }
+    .btn-gold:hover { background: #e68a00; transform: translateY(-2px); }
+    .btn-danger-outline { background: white; border: 1.5px solid #fca5a5; color: #dc2626; padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 700; cursor: pointer; }
+    .btn-danger-outline:hover { background: #fef2f2; }
+</style>
+
+<div class="pairing-header">
+    <div>
+        <h2 style="margin: 0; font-family: 'Lexend'; color: var(--navy);">Mentor–Mentee Pairings</h2>
+        <p style="margin: 5px 0 0; color: #64748b; font-size: 14px;">Oversee 1-to-1 and 1-to-many mentorship relationships across research groups.</p>
+    </div>
+    {% if user.role == 'coordinator' or user.role == 'management' %}
+    <div>
+        <a href="{% url 'groups:create_pairing' %}" class="btn-action btn-gold">
+            <i class="fas fa-link"></i> Create New Pairing
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- ACTIVE PAIRINGS TABLE -->
+<div style="margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;">
+    <h3 style="margin: 0; font-family: 'Lexend'; color: var(--navy); font-size: 18px;">
+        Active Relationships ({{ active_pairings.count }})
+    </h3>
+</div>
+
+<div class="table-container">
+    <table class="custom-table">
+        <thead>
+            <tr>
+                <th>Mentor</th>
+                <th>Mentee</th>
+                <th>Track / Group</th>
+                <th>Pairing Date</th>
+                <th>Meetings</th>
+                <th style="text-align: right;">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in active_pairings %}
+            <tr>
+                <td>
+                    <div style="font-weight: 700; color: var(--navy); font-size: 14px;">
+                        <a href="{% url 'accounts:user_detail' p.mentor.id %}" style="color: inherit; text-decoration: none;">
+                            {{ p.mentor.get_full_name|default:p.mentor.username }}
+                        </a>
+                    </div>
+                    <div style="font-size: 11px; color: #64748b;">{{ p.mentor.expertise|default:"Faculty Mentor" }}</div>
+                </td>
+                <td>
+                    <div style="font-weight: 700; color: var(--navy); font-size: 14px;">
+                        <a href="{% url 'accounts:user_detail' p.mentee.id %}" style="color: inherit; text-decoration: none;">
+                            {{ p.mentee.get_full_name|default:p.mentee.username }}
+                        </a>
+                    </div>
+                    <div style="font-size: 11px; color: #64748b;">{{ p.mentee.career_goal|default:p.mentee.academic_status }}</div>
+                </td>
+                <td>
+                    {% if p.group %}
+                        <span style="font-weight: 700; color: var(--navy); font-size: 13px;">{{ p.group.name }}</span>
+                    {% else %}
+                        <span style="color: #94a3b8; font-size: 12px;">Individual Track</span>
+                    {% endif %}
+                </td>
+                <td style="font-size: 12px; color: #64748b;">
+                    {{ p.pairing_date|date:"M d, Y" }}
+                </td>
+                <td>
+                    <span style="font-weight: 800; color: var(--navy); font-size: 13px;">
+                        {{ p.meetings.count }} sessions
+                    </span>
+                </td>
+                <td style="text-align: right;">
+                    {% if user.role == 'coordinator' or user.role == 'management' %}
+                    <form method="post" action="{% url 'groups:terminate_pairing' p.id %}" style="display: inline-block;">
+                        {% csrf_token %}
+                        <input type="hidden" name="reason" value="Administrative Termination">
+                        <button type="submit" class="btn-danger-outline" onclick="return confirm('Terminate pairing between {{ p.mentor.username }} and {{ p.mentee.username }}? Records will be preserved.');">
+                            <i class="fas fa-unlink"></i> Terminate
+                        </button>
+                    </form>
+                    {% else %}
+                    <a href="{% url 'groups:meeting_list' %}" class="btn-action" style="background: #f1f5f9; color: var(--navy);">
+                        <i class="fas fa-calendar-alt"></i> Meetings
+                    </a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 40px; color: #64748b;">
+                    <i class="fas fa-user-friends" style="font-size: 36px; color: #cbd5e1; margin-bottom: 12px; display: block;"></i>
+                    No active pairings currently established.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- HISTORICAL / TERMINATED PAIRINGS -->
+{% if terminated_pairings.exists %}
+<div style="margin-bottom: 15px;">
+    <h3 style="margin: 0; font-family: 'Lexend'; color: #64748b; font-size: 16px;">
+        Historical / Concluded Pairings ({{ terminated_pairings.count }})
+    </h3>
+</div>
+
+<div class="table-container" style="opacity: 0.85;">
+    <table class="custom-table">
+        <thead>
+            <tr>
+                <th>Mentor</th>
+                <th>Mentee</th>
+                <th>Paired On</th>
+                <th>Concluded On</th>
+                <th>Termination Reason</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in terminated_pairings %}
+            <tr>
+                <td>{{ p.mentor.get_full_name|default:p.mentor.username }}</td>
+                <td>{{ p.mentee.get_full_name|default:p.mentee.username }}</td>
+                <td style="font-size: 12px;">{{ p.pairing_date|date:"M d, Y" }}</td>
+                <td style="font-size: 12px;">{{ p.terminated_at|date:"M d, Y"|default:"N/A" }}</td>
+                <td style="font-size: 12px; color: #64748b;">{{ p.termination_reason|default:"Programme cycle completed" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}

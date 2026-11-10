@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% block header_title %}Notification Centre{% endblock %}
+
+{% block content %}
+<style>
+    .notif-container { max-width: 850px; margin: 0 auto; animation: fadeInUp 0.6s ease; }
+    .notif-card {
+        background: white; border-radius: 20px; padding: 22px 26px;
+        border: 1px solid var(--line); margin-bottom: 14px;
+        display: flex; justify-content: space-between; align-items: center;
+        gap: 20px; transition: 0.3s;
+        border-left: 6px solid #cbd5e1;
+    }
+    .notif-card.unread { border-left-color: var(--gold); background: #fffcf7; box-shadow: 0 8px 25px rgba(255, 153, 0, 0.08); }
+    .notif-card:hover { transform: translateX(8px); border-color: var(--gold); }
+    .notif-icon {
+        width: 44px; height: 44px; border-radius: 14px;
+        background: #f1f5f9; color: var(--navy); display: flex;
+        align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
+    }
+    .notif-card.unread .notif-icon { background: var(--navy); color: var(--gold); }
+    .btn-read-all {
+        padding: 10px 20px; border-radius: 12px; background: var(--navy);
+        color: white; font-size: 13px; font-weight: 700; text-decoration: none;
+        display: inline-flex; align-items: center; gap: 8px; transition: 0.3s;
+    }
+    .btn-read-all:hover { background: var(--gold); transform: translateY(-2px); }
+</style>
+
+<div class="notif-container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+        <div>
+            <h2 style="margin: 0; font-family: 'Lexend'; color: var(--navy);">System Notifications</h2>
+            <p style="margin: 4px 0 0; color: #64748b; font-size: 14px;">Real-time alerts for assignments, reviews, meetings, and programme announcements.</p>
+        </div>
+        {% if unread_count > 0 %}
+        <a href="{% url 'notifications:mark_all_read' %}" class="btn-read-all">
+            <i class="fas fa-check-double"></i> Mark All as Read ({{ unread_count }})
+        </a>
+        {% endif %}
+    </div>
+
+    {% for n in notifications %}
+    <div class="notif-card {% if not n.is_read %}unread{% endif %}">
+        <div style="display: flex; align-items: center; gap: 18px;">
+            <div class="notif-icon">
+                {% if 'task' in n.verb %}
+                    <i class="fas fa-tasks"></i>
+                {% elif 'meeting' in n.verb %}
+                    <i class="fas fa-video"></i>
+                {% elif 'achievement' in n.verb %}
+                    <i class="fas fa-medal"></i>
+                {% elif 'announcement' in n.verb %}
+                    <i class="fas fa-bullhorn"></i>
+                {% elif 'escalat' in n.verb %}
+                    <i class="fas fa-exclamation-triangle" style="color: #dc2626;"></i>
+                {% else %}
+                    <i class="fas fa-bell"></i>
+                {% endif %}
+            </div>
+            <div>
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+                    <span style="font-weight: 800; font-size: 15px; color: var(--navy);">{{ n.title }}</span>
+                    {% if not n.is_read %}
+                        <span style="font-size: 9px; font-weight: 800; background: var(--gold); color: white; padding: 2px 8px; border-radius: 10px; text-transform: uppercase;">New</span>
+                    {% endif %}
+                </div>
+                <p style="margin: 0; color: #475569; font-size: 13.5px; line-height: 1.5;">{{ n.message }}</p>
+                <span style="font-size: 11px; color: #94a3b8; font-weight: 600; display: block; margin-top: 6px;">
+                    <i class="far fa-clock"></i> {{ n.created_at|timesince }} ago
+                </span>
+            </div>
+        </div>
+
+        <div>
+            {% if n.link %}
+            <a href="{% url 'notifications:mark_as_read' n.id %}" style="padding: 8px 16px; border-radius: 10px; background: #f1f5f9; color: var(--navy); font-size: 12px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; transition: 0.2s;">
+                View Details <i class="fas fa-arrow-right"></i>
+            </a>
+            {% elif not n.is_read %}
+            <a href="{% url 'notifications:mark_as_read' n.id %}" style="padding: 8px 14px; border-radius: 10px; background: #f1f5f9; color: #64748b; font-size: 12px; font-weight: 700; text-decoration: none;" title="Mark as read">
+                <i class="fas fa-check"></i>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div style="background: white; border-radius: 24px; padding: 60px 30px; text-align: center; border: 1px solid var(--line);">
+        <i class="far fa-bell-slash" style="font-size: 48px; color: #cbd5e1; margin-bottom: 15px; display: block;"></i>
+        <h3 style="margin: 0; font-family: 'Lexend'; color: var(--navy);">All Caught Up!</h3>
+        <p style="margin: 6px 0 0; color: #64748b; font-size: 14px;">You have no unread notifications at this time.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

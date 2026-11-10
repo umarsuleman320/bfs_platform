@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block header_title %}Submit Programme Feedback{% endblock %}
+
+{% block content %}
+<style>
+    .fb-form-card {
+        max-width: 650px; margin: 0 auto; background: white;
+        padding: 40px; border-radius: 28px; border: 1px solid var(--line);
+        box-shadow: 0 15px 35px rgba(0, 51, 102, 0.05);
+    }
+    .form-label { display: block; font-size: 12px; font-weight: 800; color: var(--navy); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+    .form-input { width: 100%; padding: 13px 16px; border: 1.5px solid var(--line); border-radius: 12px; font-size: 14px; font-family: inherit; background: #fdfdfd; margin-bottom: 20px; transition: 0.3s; }
+    .form-input:focus { outline: none; border-color: var(--gold); background: white; box-shadow: 0 0 0 4px var(--gold-soft); }
+    .btn-submit-fb-form { background: var(--navy); color: white; padding: 15px; border-radius: 12px; font-size: 15px; font-weight: 700; border: none; cursor: pointer; transition: 0.3s; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn-submit-fb-form:hover { background: var(--gold); transform: translateY(-2px); }
+</style>
+
+<div class="fb-form-card">
+    <div style="text-align: center; margin-bottom: 28px;">
+        <div style="width: 55px; height: 55px; border-radius: 18px; background: var(--gold-soft); color: var(--gold); display: inline-flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 12px;">
+            <i class="fas fa-edit"></i>
+        </div>
+        <h2 style="margin: 0; font-family: 'Lexend'; color: var(--navy);">Submit Feedback / Evaluation</h2>
+        <p style="margin: 6px 0 0; color: #64748b; font-size: 14px;">
+            Feedback is permanently recorded and visible to programme leadership to maintain excellence.
+        </p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div>
+            <label class="form-label">Evaluation Category</label>
+            <select name="category" class="form-input" required>
+                <option value="session">Mentorship Session Feedback</option>
+                <option value="communication">Communication & Collaboration</option>
+                <option value="programme">Programme Experience & Curriculum</option>
+                <option value="learning">Learning Progress & Milestones</option>
+                <option value="general">General Satisfaction & Suggestions</option>
+            </select>
+        </div>
+
+        <div>
+            <label class="form-label">Related Member (Optional)</label>
+            <select name="recipient_id" class="form-input">
+                <option value="">-- General / Whole Programme --</option>
+                {% for r in recipients %}
+                <option value="{{ r.id }}">{{ r.get_full_name|default:r.username }} ({{ r.get_role_display }})</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label class="form-label">Rating</label>
+            <select name="rating" class="form-input">
+                <option value="5">★★★★★ — Exceptional / Highly Satisfied</option>
+                <option value="4">★★★★☆ — Very Good / Satisfied</option>
+                <option value="3">★★★☆☆ — Average / Needs Minor Improvement</option>
+                <option value="2">★★☆☆☆ — Below Expectations</option>
+                <option value="1">★☆☆☆☆ — Urgent Attention Required</option>
+            </select>
+        </div>
+
+        <div>
+            <label class="form-label">Feedback Content & Observations</label>
+            <textarea name="content" rows="4" class="form-input" placeholder="Provide constructive observations and specific insights..." required></textarea>
+        </div>
+
+        <button type="submit" class="btn-submit-fb-form">
+            <i class="fas fa-paper-plane"></i> Record Permanent Feedback
+        </button>
+    </form>
+</div>
+{% endblock %}

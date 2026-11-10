@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block header_title %}Wall of Fame Induction{% endblock %}
+
+{% block content %}
+<style>
+    .wof-form-card {
+        max-width: 650px; margin: 0 auto; background: white;
+        padding: 40px; border-radius: 28px; border: 1px solid var(--line);
+        box-shadow: 0 15px 35px rgba(0, 51, 102, 0.05);
+    }
+    .form-label { display: block; font-size: 12px; font-weight: 800; color: var(--navy); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+    .form-input { width: 100%; padding: 13px 16px; border: 1.5px solid var(--line); border-radius: 12px; font-size: 14px; font-family: inherit; background: #fdfdfd; margin-bottom: 20px; transition: 0.3s; }
+    .form-input:focus { outline: none; border-color: var(--gold); background: white; box-shadow: 0 0 0 4px var(--gold-soft); }
+    .btn-submit-wof { background: var(--gold); color: white; padding: 15px; border-radius: 12px; font-size: 15px; font-weight: 700; border: none; cursor: pointer; transition: 0.3s; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn-submit-wof:hover { background: #e68a00; transform: translateY(-2px); }
+</style>
+
+<div class="wof-form-card">
+    <div style="text-align: center; margin-bottom: 25px;">
+        <div style="width: 55px; height: 55px; border-radius: 18px; background: var(--gold-soft); color: var(--gold); display: inline-flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 12px;">
+            <i class="fas fa-crown"></i>
+        </div>
+        <h2 style="margin: 0; font-family: 'Lexend'; color: var(--navy);">Induct into Wall of Fame</h2>
+        <p style="margin: 6px 0 0; color: #64748b; font-size: 14px;">Award recognition to exemplary fellows or mentors.</p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div>
+            <label class="form-label">Select Fellow / Faculty Member</label>
+            <select name="user_id" class="form-input" required>
+                <option value="">-- Choose Member --</option>
+                {% for u in users %}
+                <option value="{{ u.id }}">{{ u.get_full_name|default:u.username }} ({{ u.get_role_display }})</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div>
+                <label class="form-label">Recognition Category</label>
+                <select name="type" class="form-input" required>
+                    <option value="mentee_of_month">Fellow of the Month</option>
+                    <option value="mentor_of_month">Mentor of the Month</option>
+                    <option value="hall_of_fame">Hall of Fame Inductee</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label">Period / Month</label>
+                <input type="text" name="period" class="form-input" placeholder="e.g. November 2026" required>
+            </div>
+        </div>
+
+        <div>
+            <label class="form-label">Citation / Award Title</label>
+            <input type="text" name="badge_title" class="form-input" placeholder="e.g. Breakthrough Algorithm Optimization" required>
+        </div>
+
+        <div>
+            <label class="form-label">Commendation Note</label>
+            <textarea name="note" rows="4" class="form-input" placeholder="Summary of reasons and contributions that earned this recognition..." required></textarea>
+        </div>
+
+        <button type="submit" class="btn-submit-wof">
+            <i class="fas fa-check-circle"></i> Confirm Induction to Wall of Fame
+        </button>
+    </form>
+</div>
+{% endblock %}

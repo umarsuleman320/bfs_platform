@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% block header_title %}{% if form_type == 'mentor' %}Onboard New Mentor{% else %}Register New Mentee{% endif %}{% endblock %}
+
+{% block content %}
+<style>
+    .form-container-card {
+        max-width: 720px; margin: 0 auto; background: white;
+        padding: 40px; border-radius: 28px; border: 1px solid var(--line);
+        box-shadow: 0 15px 35px rgba(0, 51, 102, 0.05);
+    }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .form-full { grid-column: span 2; }
+    
+    @media (max-width: 650px) {
+        .form-grid { grid-template-columns: 1fr; }
+        .form-full { grid-column: span 1; }
+        .form-container-card { padding: 25px 20px; }
+    }
+
+    .form-label {
+        display: block; font-size: 12px; font-weight: 800;
+        color: var(--navy); text-transform: uppercase; letter-spacing: 0.8px;
+        margin-bottom: 8px;
+    }
+    .form-input {
+        width: 100%; padding: 13px 16px; border: 1.5px solid var(--line);
+        border-radius: 12px; font-size: 14px; font-family: inherit;
+        background: #fdfdfd; transition: 0.3s;
+    }
+    .form-input:focus {
+        outline: none; border-color: var(--gold); background: white;
+        box-shadow: 0 0 0 4px var(--gold-soft);
+    }
+    .btn-submit-form {
+        background: var(--navy); color: white; padding: 14px 28px;
+        border-radius: 12px; font-size: 14px; font-weight: 700;
+        border: none; cursor: pointer; transition: 0.3s; width: 100%;
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-submit-form:hover {
+        background: var(--gold); transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(255, 153, 0, 0.3);
+    }
+</style>
+
+<div class="form-container-card">
+    <div style="margin-bottom: 30px; text-align: center;">
+        <div style="width: 60px; height: 60px; border-radius: 20px; background: var(--navy); color: var(--gold); display: inline-flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 15px;">
+            {% if form_type == 'mentor' %}
+                <i class="fas fa-chalkboard-teacher"></i>
+            {% else %}
+                <i class="fas fa-user-graduate"></i>
+            {% endif %}
+        </div>
+        <h2 style="margin: 0; font-family: 'Lexend'; color: var(--navy);">
+            {% if form_type == 'mentor' %}Add Mentor to Faculty{% else %}Register Mentee Account{% endif %}
+        </h2>
+        <p style="margin: 6px 0 0; color: #64748b; font-size: 14px;">
+            {% if form_type == 'mentor' %}
+                Enter the mentor's credentials, professional qualifications, and area of expertise.
+            {% else %}
+                Enter the mentee's academic information, interests, and career objectives.
+            {% endif %}
+        </p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-grid">
+            <div>
+                <label class="form-label">First Name</label>
+                <input type="text" name="first_name" class="form-input" placeholder="e.g. Dr. Ahmed" required>
+            </div>
+            <div>
+                <label class="form-label">Last Name</label>
+                <input type="text" name="last_name" class="form-input" placeholder="e.g. Bello" required>
+            </div>
+
+            <div>
+                <label class="form-label">Username</label>
+                <input type="text" name="username" class="form-input" placeholder="e.g. ahmed_bello" required>
+            </div>
+            <div>
+                <label class="form-label">Email Address</label>
+                <input type="email" name="email" class="form-input" placeholder="e.g. a.bello@example.com" required>
+            </div>
+
+            <div>
+                <label class="form-label">Temporary Password</label>
+                <input type="password" name="password" class="form-input" placeholder="Minimum 8 characters" required>
+            </div>
+            <div>
+                <label class="form-label">Phone Number (Optional)</label>
+                <input type="text" name="phone" class="form-input" placeholder="+234...">
+            </div>
+
+            {% if form_type == 'mentor' %}
+            <div>
+                <label class="form-label">Qualification / Degree</label>
+                <select name="qualification" class="form-input">
+                    <option value="Ph.D">Doctor of Philosophy (Ph.D)</option>
+                    <option value="M.Sc">Master of Science (M.Sc)</option>
+                    <option value="B.Sc" selected>Bachelor of Science (B.Sc)</option>
+                    <option value="Industry Lead">Senior Industry Practitioner</option>
+                    <option value="Research Fellow">Research Fellow</option>
+                    <option value="Other">Other Qualification</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label">Primary Expertise</label>
+                <input type="text" name="expertise" class="form-input" placeholder="e.g. Cloud Engineering, Software Development, AI, Research" required>
+            </div>
+            {% else %}
+            <div>
+                <label class="form-label">Academic Status</label>
+                <select name="academic_status" class="form-input">
+                    <option value="Undergraduate Student" selected>Undergraduate Student</option>
+                    <option value="Recent Graduate">Recent Graduate</option>
+                    <option value="Postgraduate Student">Postgraduate Student</option>
+                    <option value="Early Career Professional">Early Career Professional</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label">Primary Career Goal</label>
+                <input type="text" name="career_goal" class="form-input" placeholder="e.g. Software Engineer at Global Tech, AI Researcher" required>
+            </div>
+            <div class="form-full">
+                <label class="form-label">Areas of Interest / Specialization</label>
+                <input type="text" name="interests" class="form-input" placeholder="e.g. Python, Fullstack Development, Data Science, Machine Learning">
+            </div>
+            {% endif %}
+
+            <div class="form-full">
+                <label class="form-label">Biography / Background Summary</label>
+                <textarea name="bio" rows="3" class="form-input" placeholder="Brief summary of background or expectations..."></textarea>
+            </div>
+
+            <div class="form-full" style="margin-top: 10px;">
+                <button type="submit" class="btn-submit-form">
+                    <i class="fas fa-check-circle"></i> Complete Registration & Activate
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% block header_title %}Global Search{% endblock %}
+
+{% block content %}
+<style>
+    .search-container { max-width: 950px; margin: 0 auto; animation: fadeInUp 0.6s ease; }
+    .search-input-box {
+        background: white; border-radius: 20px; padding: 15px 25px;
+        border: 2px solid var(--line); display: flex; align-items: center; gap: 15px;
+        box-shadow: 0 10px 30px rgba(0, 51, 102, 0.05); margin-bottom: 35px;
+    }
+    .search-input-box input {
+        border: none; outline: none; font-size: 16px; font-family: inherit; width: 100%;
+    }
+    .result-group { margin-bottom: 35px; }
+    .result-group-title {
+        font-family: 'Lexend'; font-size: 18px; color: var(--navy);
+        border-bottom: 2px solid var(--line); padding-bottom: 10px; margin-bottom: 16px;
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .result-card {
+        background: white; border-radius: 18px; padding: 20px 24px; border: 1px solid var(--line);
+        margin-bottom: 12px; transition: 0.3s; display: flex; justify-content: space-between; align-items: center;
+    }
+    .result-card:hover { transform: translateX(6px); border-color: var(--gold); }
+</style>
+
+<div class="search-container">
+    <form method="get" action="{% url 'core:search' %}">
+        <div class="search-input-box">
+            <i class="fas fa-search" style="color: var(--navy); font-size: 20px;"></i>
+            <input type="text" name="q" value="{{ query }}" placeholder="Search by name, expertise, track, task, achievement, or keyword...">
+            <button type="submit" style="padding: 10px 24px; border-radius: 12px; background: var(--navy); color: white; border: none; font-weight: 700; cursor: pointer;">
+                Search
+            </button>
+        </div>
+    </form>
+
+    {% if query %}
+        <p style="color: #64748b; font-size: 14px; margin-bottom: 25px;">
+            Showing <strong>{{ total_results }}</strong> result{{ total_results|pluralize }} for "<em>{{ query }}</em>"
+        </p>
+
+        <!-- MENTORS -->
+        {% if mentors %}
+        <div class="result-group">
+            <div class="result-group-title">
+                <span><i class="fas fa-chalkboard-teacher" style="color: var(--gold);"></i> Faculty Mentors ({{ mentors.count }})</span>
+            </div>
+            {% for m in mentors %}
+            <div class="result-card">
+                <div>
+                    <h4 style="margin: 0 0 4px; font-family: 'Lexend'; color: var(--navy); font-size: 16px;">{{ m.get_full_name|default:m.username }}</h4>
+                    <div style="font-size: 12px; color: #64748b;">{{ m.expertise|default:"Faculty" }} • {{ m.qualification|default:"" }} • {{ m.email }}</div>
+                </div>
+                <a href="{% url 'accounts:user_detail' m.id %}" style="padding: 6px 14px; border-radius: 10px; background: #f1f5f9; color: var(--navy); text-decoration: none; font-size: 12px; font-weight: 700;">
+                    Profile <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- MENTEES -->
+        {% if mentees %}
+        <div class="result-group">
+            <div class="result-group-title">
+                <span><i class="fas fa-user-graduate" style="color: var(--gold);"></i> Fellows / Mentees ({{ mentees.count }})</span>
+            </div>
+            {% for m in mentees %}
+            <div class="result-card">
+                <div>
+                    <h4 style="margin: 0 0 4px; font-family: 'Lexend'; color: var(--navy); font-size: 16px;">{{ m.get_full_name|default:m.username }}</h4>
+                    <div style="font-size: 12px; color: #64748b;">{{ m.academic_status|default:"Fellow" }} • {{ m.career_goal|default:m.interests }}</div>
+                </div>
+                <a href="{% url 'accounts:user_detail' m.id %}" style="padding: 6px 14px; border-radius: 10px; background: #f1f5f9; color: var(--navy); text-decoration: none; font-size: 12px; font-weight: 700;">
+                    Profile <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- TRACKS -->
+        {% if tracks %}
+        <div class="result-group">
+            <div class="result-group-title">
+                <span><i class="fas fa-layer-group" style="color: var(--gold);"></i> Research Tracks ({{ tracks.count }})</span>
+            </div>
+            {% for t in tracks %}
+            <div class="result-card">
+                <div>
+                    <h4 style="margin: 0 0 4px; font-family: 'Lexend'; color: var(--navy); font-size: 16px;">{{ t.name }}</h4>
+                    <div style="font-size: 12px; color: #64748b;">Lead: {{ t.mentor.get_full_name|default:"Unassigned" }} • Capacity: {{ t.capacity }}</div>
+                </div>
+                <a href="{% url 'groups:group_detail' t.id %}" style="padding: 6px 14px; border-radius: 10px; background: #f1f5f9; color: var(--navy); text-decoration: none; font-size: 12px; font-weight: 700;">
+                    View Track <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- TASKS -->
+        {% if tasks %}
+        <div class="result-group">
+            <div class="result-group-title">
+                <span><i class="fas fa-tasks" style="color: var(--gold);"></i> Assignments & Tasks ({{ tasks.count }})</span>
+            </div>
+            {% for t in tasks %}
+            <div class="result-card">
+                <div>
+                    <h4 style="margin: 0 0 4px; font-family: 'Lexend'; color: var(--navy); font-size: 16px;">{{ t.title }}</h4>
+                    <div style="font-size: 12px; color: #64748b;">Deadline: {{ t.deadline|date:"M d, Y" }} • Points: {{ t.points_possible }} XP</div>
+                </div>
+                <a href="{% url 'tasks:task_manager' %}" style="padding: 6px 14px; border-radius: 10px; background: #f1f5f9; color: var(--navy); text-decoration: none; font-size: 12px; font-weight: 700;">
+                    Details <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- ACHIEVEMENTS -->
+        {% if achievements %}
+        <div class="result-group">
+            <div class="result-group-title">
+                <span><i class="fas fa-trophy" style="color: var(--gold);"></i> Milestones & Achievements ({{ achievements.count }})</span>
+            </div>
+            {% for a in achievements %}
+            <div class="result-card">
+                <div>
+                    <h4 style="margin: 0 0 4px; font-family: 'Lexend'; color: var(--navy); font-size: 16px;">{{ a.title }}</h4>
+                    <div style="font-size: 12px; color: #64748b;">{{ a.mentee.username }} • {{ a.organisation }} • {{ a.get_category_display }}</div>
+                </div>
+                <a href="{% url 'progress:achievements' %}" style="padding: 6px 14px; border-radius: 10px; background: #f1f5f9; color: var(--navy); text-decoration: none; font-size: 12px; font-weight: 700;">
+                    View <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if total_results == 0 %}
+        <div style="background: white; border-radius: 24px; padding: 50px; text-align: center; border: 1px solid var(--line);">
+            <i class="fas fa-search" style="font-size: 38px; color: #cbd5e1; margin-bottom: 12px; display: block;"></i>
+            <h4 style="margin: 0; font-family: 'Lexend'; color: var(--navy);">No Matching Results</h4>
+            <p style="margin: 6px 0 0; color: #64748b; font-size: 14px;">Try searching with different terms or check spelling.</p>
+        </div>
+        {% endif %}
+    {% else %}
+        <div style="background: white; border-radius: 24px; padding: 50px; text-align: center; border: 1px solid var(--line);">
+            <i class="fas fa-compass" style="font-size: 40px; color: var(--gold); margin-bottom: 15px; display: block;"></i>
+            <h3 style="margin: 0; font-family: 'Lexend'; color: var(--navy);">Explore the Entire BFS Platform</h3>
+            <p style="margin: 8px 0 0; color: #64748b; font-size: 14px;">Enter names, areas of expertise, research tracks, or task keywords above.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

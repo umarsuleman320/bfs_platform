@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% block header_title %}Wall of Fame & Fellow Honours{% endblock %}
+
+{% block content %}
+<style>
+    .wof-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; margin-bottom: 35px; }
+    .wof-banner {
+        background: linear-gradient(135deg, #001a33 0%, #003366 100%);
+        border-radius: 28px; padding: 40px; color: white; margin-bottom: 35px;
+        border: 3px solid var(--gold); box-shadow: 0 15px 35px rgba(0, 51, 102, 0.2);
+        display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 25px;
+    }
+    .honour-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 45px; }
+    .honour-card {
+        background: white; border-radius: 24px; padding: 30px; border: 1px solid var(--line);
+        text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.03); transition: 0.3s;
+        border-top: 6px solid var(--gold); position: relative; overflow: hidden;
+    }
+    .honour-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0, 51, 102, 0.08); }
+    .honour-avatar {
+        width: 80px; height: 80px; border-radius: 50%; background: var(--navy); color: var(--gold);
+        display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 900;
+        margin: 0 auto 16px; border: 3px solid var(--gold);
+    }
+    .honour-badge {
+        font-size: 11px; font-weight: 800; background: var(--gold-soft); color: var(--gold);
+        padding: 4px 14px; border-radius: 20px; text-transform: uppercase; letter-spacing: 1px;
+        display: inline-block; margin-bottom: 12px;
+    }
+</style>
+
+<div class="wof-header">
+    <div>
+        <h2 style="margin: 0; font-family: 'Lexend'; color: var(--navy);">Wall of Fame & Honours</h2>
+        <p style="margin: 5px 0 0; color: #64748b; font-size: 14px;">Celebrating our most dedicated fellows, outstanding mentors, and milestone breakthroughs.</p>
+    </div>
+    {% if user.role == 'management' or user.role == 'coordinator' %}
+    <div>
+        <a href="{% url 'core:manage_wall_of_fame' %}" style="padding: 10px 20px; border-radius: 12px; background: var(--gold); color: white; text-decoration: none; font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px;">
+            <i class="fas fa-crown"></i> Induct Honoree
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="wof-banner">
+    <div>
+        <span style="font-size: 11px; font-weight: 800; color: var(--gold); letter-spacing: 2px; text-transform: uppercase;">Hall of Excellence</span>
+        <h2 style="margin: 8px 0 10px; font-family: 'Lexend'; font-size: 28px;">Distinguished Fellowship Recognition</h2>
+        <p style="margin: 0; color: rgba(255,255,255,0.85); font-size: 14.5px; max-width: 650px;">
+            Honouring outstanding research contributions, exemplary mentor leadership, and verifiable milestone accomplishments across the BFS programme.
+        </p>
+    </div>
+    <div style="font-size: 54px; color: var(--gold);">
+        <i class="fas fa-trophy"></i>
+    </div>
+</div>
+
+<!-- MENTEES OF THE MONTH -->
+<h3 style="margin: 0 0 18px; font-family: 'Lexend'; color: var(--navy); font-size: 20px;">
+    <i class="fas fa-star" style="color: var(--gold);"></i> Fellows of the Month
+</h3>
+<div class="honour-grid">
+    {% for r in mentees_of_month %}
+    <div class="honour-card">
+        <div class="honour-avatar">
+            {{ r.user.first_name|default:r.user.username|first|upper }}
+        </div>
+        <span class="honour-badge">{{ r.period }}</span>
+        <h4 style="margin: 0 0 6px; font-family: 'Lexend'; color: var(--navy); font-size: 18px;">
+            {{ r.user.get_full_name|default:r.user.username }}
+        </h4>
+        <div style="font-size: 13px; font-weight: 700; color: #64748b; margin-bottom: 12px;">{{ r.badge_title }}</div>
+        <p style="margin: 0; color: #475569; font-size: 13.5px; line-height: 1.5;">{{ r.note }}</p>
+    </div>
+    {% empty %}
+    <div style="grid-column: 1 / -1; background: white; border-radius: 20px; padding: 30px; text-align: center; border: 1px solid var(--line); color: #64748b;">
+        No fellows inducted yet for this month.
+    </div>
+    {% endfor %}
+</div>
+
+<!-- MENTORS OF THE MONTH -->
+<h3 style="margin: 0 0 18px; font-family: 'Lexend'; color: var(--navy); font-size: 20px;">
+    <i class="fas fa-award" style="color: var(--gold);"></i> Faculty Mentors of the Month
+</h3>
+<div class="honour-grid">
+    {% for r in mentors_of_month %}
+    <div class="honour-card" style="border-top-color: var(--navy);">
+        <div class="honour-avatar" style="border-color: var(--navy);">
+            {{ r.user.first_name|default:r.user.username|first|upper }}
+        </div>
+        <span class="honour-badge" style="background: #e0f2fe; color: #0284c7;">{{ r.period }}</span>
+        <h4 style="margin: 0 0 6px; font-family: 'Lexend'; color: var(--navy); font-size: 18px;">
+            {{ r.user.get_full_name|default:r.user.username }}
+        </h4>
+        <div style="font-size: 13px; font-weight: 700; color: #64748b; margin-bottom: 12px;">{{ r.badge_title }}</div>
+        <p style="margin: 0; color: #475569; font-size: 13.5px; line-height: 1.5;">{{ r.note }}</p>
+    </div>
+    {% empty %}
+    <div style="grid-column: 1 / -1; background: white; border-radius: 20px; padding: 30px; text-align: center; border: 1px solid var(--line); color: #64748b;">
+        No faculty mentors inducted yet.
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

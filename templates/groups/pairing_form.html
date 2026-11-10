@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block header_title %}Create Mentor–Mentee Pairing{% endblock %}
+
+{% block content %}
+<style>
+    .pairing-card-form {
+        max-width: 650px; margin: 0 auto; background: white;
+        padding: 40px; border-radius: 28px; border: 1px solid var(--line);
+        box-shadow: 0 15px 35px rgba(0, 51, 102, 0.05);
+    }
+    .form-label { display: block; font-size: 12px; font-weight: 800; color: var(--navy); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+    .form-input { width: 100%; padding: 14px 16px; border: 1.5px solid var(--line); border-radius: 12px; font-size: 14px; font-family: inherit; background: #fdfdfd; margin-bottom: 22px; transition: 0.3s; }
+    .form-input:focus { outline: none; border-color: var(--gold); background: white; box-shadow: 0 0 0 4px var(--gold-soft); }
+    .btn-submit-pair { background: var(--navy); color: white; padding: 16px; border-radius: 12px; font-size: 15px; font-weight: 700; border: none; cursor: pointer; transition: 0.3s; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .btn-submit-pair:hover { background: var(--gold); transform: translateY(-2px); box-shadow: 0 10px 20px rgba(255, 153, 0, 0.3); }
+</style>
+
+<div class="pairing-card-form">
+    <div style="text-align: center; margin-bottom: 30px;">
+        <div style="width: 60px; height: 60px; border-radius: 20px; background: var(--navy); color: var(--gold); display: inline-flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 15px;">
+            <i class="fas fa-handshake"></i>
+        </div>
+        <h2 style="margin: 0; font-family: 'Lexend'; color: var(--navy);">Pair and Notify</h2>
+        <p style="margin: 6px 0 0; color: #64748b; font-size: 14px;">Establish a formal mentorship pairing. Both the mentor and mentee will be immediately notified.</p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div>
+            <label class="form-label">Select Mentor</label>
+            <select name="mentor_id" class="form-input" required>
+                <option value="">-- Choose Registered Mentor --</option>
+                {% for m in mentors %}
+                <option value="{{ m.id }}">{{ m.get_full_name|default:m.username }} ({{ m.expertise|default:"Faculty" }})</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label class="form-label">Select Mentee</label>
+            <select name="mentee_id" class="form-input" required>
+                <option value="">-- Choose Registered Mentee --</option>
+                {% for m in mentees %}
+                <option value="{{ m.id }}">{{ m.get_full_name|default:m.username }} ({{ m.academic_status|default:"Student" }})</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label class="form-label">Research Track / Group (Optional)</label>
+            <select name="group_id" class="form-input">
+                <option value="">-- None / Individual Pairing --</option>
+                {% for g in groups %}
+                <option value="{{ g.id }}">{{ g.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit" class="btn-submit-pair">
+            <i class="fas fa-paper-plane"></i> Establish Pairing & Dispatch Notifications
+        </button>
+    </form>
+</div>
+{% endblock %}
